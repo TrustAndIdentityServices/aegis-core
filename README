@@ -1,0 +1,72 @@
+
+Welcome to Aegis. Aegis is divided into following maven projects, each with its own GIT repository :
+
+aegis-core - This project.
+             Provides the core engine source and tests.
+             Use this project if you are a Contributor to the Aegis runtime
+aegis-client-java -  Meant for Integrators of Aegis enforcement engine - eg 
+             developers wanting to incorporate Aegis enforcement to define and
+             enforce policies in their own apps.
+aegis-raptor -  Provides Raptor integration. Meant for Raptor developers
+             wanting to incorporate Aegis functionality for their raptor apps.
+
+Eclipse Instructions:
+======================
+Prerequisites :
+ Install Eclipse classic or equivalent
+ Download and install Maven Eclispse plugin :
+     Maven Integration for Eclipse and Maven Integration for Eclipse WTP.
+ [Optional] Download & install EGit plugin from: http://eclipse.org/egit/
+
+1) Clone the aegis-runtime to a local directory.
+   To do this, you can either :
+    - Install the GIT plugin in eclipse and use its GIT Explorer feature 
+      to clone the GIT repository to your local directory
+      [Note : Do not create a GIT project in Eclipse as yet]
+    OR
+    - Execute the git command  on a terminal window. Eg:
+        git clone <repository>
+ 
+2) Create a Eclipse Maven Project
+   (a) Start Eclipse and select File->Import...
+   (b) select "Maven->Maven Project" (if maven is missing....)
+   (c) "Import" dialog : Select "Existing Maven Projects"
+      "Select maven projects" dialog- Click "Browse.." and naviagte to
+      the directory containing pom.xml starting with the GIT repository
+      cloned in step 1 (eg aegis-runtime).
+3) Build and run tests :
+   Select root of the eclipse project - execute "Run As..." -> 'maven test' 
+
+4) Execute AegisSample' :
+   Navigate to AegisSample.java
+   Execute Run As... -> Java Application.
+
+Dependencies:
+==============
+The project needs JUnit and JSON jars.
+json.jar and junit-4.10.jar are through maven. You do not need to do anything.
+
+Directory structure:
+====================
+
+src/main/java/ : contains source file
+src/test/java : Junti tests and  
+src/main/resources/ : Properties file
+
+CLI commands To build and run:
+==============================
+
+Navigate to directory containing pom.xml
+#cd <gitdir>/aegis-runtime
+
+Build the jar file (aegis-runtime-0.0.1-SNAPSHOT.jar)
+# mvn package
+
+Execute tests
+# mvn tests
+
+# Cleanup
+# mvn clean
+ 
+
+
