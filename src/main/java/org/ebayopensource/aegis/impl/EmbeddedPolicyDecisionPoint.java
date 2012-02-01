@@ -98,7 +98,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
     private boolean subjectMatches(List<Subject> reqsubjects, Expression<Subject> psubs, List<Environment> env)
     {
         boolean match = false;
-        if (psubs == null || psubs.getMembers().size() == 0)
+        if (psubs == null || psubs.getMembers() == null || psubs.getMembers().size() == 0)
             match =  true; // Empty is same as ANY subject)
 
         int combiner = Expression.ANY_OF;

@@ -48,6 +48,8 @@ public class JSONPolicyStore implements PolicyStore
                       new InputStreamReader(ClassLoader.getSystemResourceAsStream("policies.json")));
             String polstr = null;
             while ((polstr = rdr.readLine()) != null) {
+            	if (polstr.startsWith("#"))
+            		continue;
                 Policy pol1 = parsePolicy(polstr);
                 policies.add(pol1);
             }
@@ -111,19 +113,26 @@ public class JSONPolicyStore implements PolicyStore
     
             }
             JSONArray j_resources = policy.getJSONArray("Resources");
-            ob = j_resources.getJSONObject(0);
-            JSONObject resob = ob.getJSONObject("Resource");
-            List<Resource> resources = new ArrayList<Resource>();
-            Resource res1 = new Resource(resob.getString("type"),resob.getString("name") );
-            resources.add(res1);
-
+            List<Resource> resources = null;
+            for (int i = 0; i < j_resources.length(); i++) {
+                ob = j_resources.getJSONObject(i);
+                JSONObject resob = ob.getJSONObject("Resource");
+                if (resources == null) {
+                    resources = new ArrayList<Resource>();
+                }
+                Resource res1 = new Resource(resob.getString("type"),resob.getString("name") );
+                resources.add(res1);
+            }
             JSONArray j_actions = policy.getJSONArray("Actions");
-            ob = j_actions.getJSONObject(0);
-            JSONObject actob = ob.getJSONObject("Action");
-            List<Action> actions = new ArrayList<Action>();
-            Action ac1 = new Action(actob.getString("type"),actob.getString("name") );
-            actions.add(ac1);
-
+            List<Action> actions = null;
+            for (int i = 0; i < j_actions.length(); i++) {
+                ob = j_actions.getJSONObject(i);
+                JSONObject actob = ob.getJSONObject("Action");
+                if (actions == null)
+                    actions = new ArrayList<Action>();
+                Action ac1 = new Action(actob.getString("type"),actob.getString("name") );
+                actions.add(ac1);
+            }
             JSONObject j_conditions = policy.getJSONObject("Conditions");
             oper = null;
             if (j_conditions.has("ANY_OF")) {
