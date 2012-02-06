@@ -22,7 +22,7 @@ import org.ebayopensource.aegis.Decision;
 import org.ebayopensource.aegis.Effect;
 import org.ebayopensource.aegis.Environment;
 import org.ebayopensource.aegis.Expression;
-import org.ebayopensource.aegis.MetaData;
+import org.ebayopensource.aegis.md.MetaData;
 import org.ebayopensource.aegis.Policy;
 import org.ebayopensource.aegis.PolicyDecisionPoint;
 import org.ebayopensource.aegis.PolicyStore;
