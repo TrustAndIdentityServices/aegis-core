@@ -20,9 +20,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class ConditionTest {
+public class AssertionTest {
 	
-    static private String type = "typex";
+    static private String category = "categoryx";
     static private String name = "namex";
     static private String attr1 = "attr1";
     static private String val1 = "val1";
@@ -50,39 +50,39 @@ public class ConditionTest {
 
     @Test
     public void testType() {
-        Condition condition = new Condition(type, name); 
-        assertEquals(type, condition.getType());
+        Assertion assertion = new Assertion(category, name); 
+        assertEquals(category, assertion.getCategory());
     }
 
     @Test
     public void testName() {
-        Condition condition = new Condition(type, name); 
-        assertEquals(name, condition.getName());
+        Assertion assertion = new Assertion(category, name); 
+        assertEquals(name, assertion.getName());
     }
     @Test
     public void testExprEQOperation() {
-        testExpr(Condition.OP_EQ);
+        testExpr(Assertion.OP_EQ);
     }
     @Test
     public void testExprNEOperation() {
-        testExpr(Condition.OP_NE);
+        testExpr(Assertion.OP_NE);
     }
 	
     @Test
     public void testExprLTOperation() {
-        testExpr(Condition.OP_LT);
+        testExpr(Assertion.OP_LT);
     }
 
     @Test
     public void testExprGTOperation() {
-        testExpr(Condition.OP_GT);
+        testExpr(Assertion.OP_GT);
     }
 
     @Test
     public void testExprInvalidOperation() {
         try {
-            Condition condition = new Condition(type, name); 
-            condition.addExpr(attr1, INVALID_OP, val1);
+            Assertion assertion = new Assertion(category, name); 
+            assertion.setCExpr(attr1, INVALID_OP, val1);
             assertEquals(false, true);
         } catch (Exception ex) {
             assertEquals(true, true);
@@ -91,8 +91,8 @@ public class ConditionTest {
     @Test
     public void testExprInvalidId() {
         try {
-            Condition condition = new Condition(type, name); 
-            condition.addExpr(null, Condition.OP_EQ, val1);
+            Assertion assertion = new Assertion(category, name); 
+            assertion.setCExpr(null, Assertion.OP_EQ, val1);
             assertEquals(false, true);
         } catch (Exception ex) {
             assertEquals(true, true);
@@ -101,8 +101,8 @@ public class ConditionTest {
     @Test
     public void testExprInvalidValue() {
         try {
-            Condition condition = new Condition(type, name); 
-            condition.addExpr(attr1, Condition.OP_EQ, null);
+            Assertion assertion = new Assertion(category, name); 
+            assertion.setCExpr(attr1, Assertion.OP_EQ, null);
             assertEquals(false, true);
         } catch (Exception ex) {
             assertEquals(true, true);
@@ -111,20 +111,21 @@ public class ConditionTest {
 
     @Test
     public void testToString() {
-        Condition condition = new Condition(type, name); 
-        condition.addExpr(attr1, Condition.OP_EQ, val1);
-        condition.addExpr(attr2, Condition.OP_GT, val2);
-        assertEquals(2, condition.getAllAttrs().size());
-        boolean c =  (condition.toString() != null);
-        assertEquals(c, true);
+        Assertion assertion = new Assertion(category, name); 
+        assertion.setCExpr(attr1, Assertion.OP_EQ, val1);
+        assertion.setCExpr(attr2, Assertion.OP_GT, val2);
+        CExpr c = assertion.getCExpr();
+        assertEquals((c != null), true);
+        assertEquals(c.id_, attr2);
+        assertEquals(c.val_, val2);
+        assertEquals(c.op_, Assertion.OP_GT);
+        boolean t =  (assertion.toString() != null);
     }
 
     private void testExpr(int op) {
-        Condition condition = new Condition(type, name); 
-        condition.addExpr(attr1, op, val1);
-        ArrayList<CExpr> al = condition.getAllAttrs();
-        assertEquals(1, al.size());
-        CExpr e = al.get(0);
+        Assertion assertion = new Assertion(category, name); 
+        assertion.setCExpr(attr1, op, val1);
+        CExpr e = assertion.getCExpr();
         boolean b = (e != null);
         assertEquals(true, b);
         assertEquals(attr1, e.id_);

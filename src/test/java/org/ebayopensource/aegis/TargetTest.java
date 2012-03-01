@@ -17,7 +17,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-public class ResourceTest {
+public class TargetTest {
 	
     static private String type = "typex";
     static private String name = "http://www.ebay.com/resource1";
@@ -46,24 +46,24 @@ public class ResourceTest {
 
     @Test
     public void testType() {
-        Resource resource = new Resource(type, name); 
+        Target resource = new Target(type, name); 
         assertEquals(type, resource.getType());
     }
 
     @Test
     public void testName() {
-        Resource resource = new Resource(type, name); 
+        Target resource = new Target(type, name); 
         assertEquals(name, resource.getName());
     }
     @Test
     public void testEmptyAttrs() {
-        Resource resource = new Resource(type, name); 
+        Target resource = new Target(type, name); 
         assertEquals(null, resource.getAttribute(attr1));
     }
 	
     @Test
     public void testSetAttributeNew() {
-        Resource resource = new Resource(type, name); 
+        Target resource = new Target(type, name); 
         resource.setAttribute(attr1, val1);
         assertEquals(val1, resource.getAttribute(attr1));
         resource.setAttribute(attr2, val2);
@@ -72,7 +72,7 @@ public class ResourceTest {
     }
     @Test
     public void testToString() {
-        Resource resource = new Resource(type, name); 
+        Target resource = new Target(type, name); 
         resource.setAttribute(attr1, val1);
         boolean c =  (resource.toString() != null);
         assertEquals(true, c);

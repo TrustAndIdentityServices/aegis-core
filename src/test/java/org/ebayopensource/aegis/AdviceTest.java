@@ -26,7 +26,7 @@ public class AdviceTest {
     static private String val1 = "val1";
     static private String attr2 = "attr2";
     static private String val2 = "val2";
-    static private int INVALID_OP = Condition.OP_MAX+1;
+    static private int INVALID_OP = Assertion.OP_MAX+1;
 
     @BeforeClass
     public static void oneTimeSetUp() {
@@ -54,21 +54,21 @@ public class AdviceTest {
 
     @Test
     public void testExprEQOperation() {
-        testExpr(Condition.OP_EQ);
+        testExpr(Assertion.OP_EQ);
     }
     @Test
     public void testExprNEOperation() {
-        testExpr(Condition.OP_NE);
+        testExpr(Assertion.OP_NE);
     }
 	
     @Test
     public void testExprLTOperation() {
-        testExpr(Condition.OP_LT);
+        testExpr(Assertion.OP_LT);
     }
 
     @Test
     public void testExprGTOperation() {
-        testExpr(Condition.OP_GT);
+        testExpr(Assertion.OP_GT);
     }
 
     private void testExpr(int op) {
@@ -97,7 +97,7 @@ public class AdviceTest {
     public void testExprInvalidId() {
         try {
             Advice advice = new Advice(type); 
-            advice.addExpr(null, Condition.OP_EQ, val1);
+            advice.addExpr(null, Assertion.OP_EQ, val1);
             assertEquals(false, true);
         } catch (Exception ex) {
             assertEquals(true, true);
@@ -107,7 +107,7 @@ public class AdviceTest {
     public void testExprInvalidValue() {
         try {
             Advice advice = new Advice(type); 
-            advice.addExpr(attr1, Condition.OP_EQ, null);
+            advice.addExpr(attr1, Assertion.OP_EQ, null);
             assertEquals(false, true);
         } catch (Exception ex) {
             assertEquals(true, true);
@@ -121,8 +121,8 @@ public class AdviceTest {
     @Test
     public void testExprAttrs() {
         Advice advice = new Advice(type); 
-        advice.addExpr(attr1, Condition.OP_EQ, val1);
-        advice.addExpr(attr2, Condition.OP_NE, val2);
+        advice.addExpr(attr1, Assertion.OP_EQ, val1);
+        advice.addExpr(attr2, Assertion.OP_NE, val2);
         ArrayList<CExpr> es = advice.getAllExpr();
         boolean b = (es != null);
         assertEquals(true, b);
@@ -130,11 +130,11 @@ public class AdviceTest {
         CExpr c1 = es.get(0);
         assertEquals(attr1, c1.id_);
         assertEquals(val1, c1.val_);
-        assertEquals(Condition.OP_EQ, c1.op_);
+        assertEquals(Assertion.OP_EQ, c1.op_);
         CExpr c2 = es.get(1);
         assertEquals(attr2, c2.id_);
         assertEquals(val2, c2.val_);
-        assertEquals(Condition.OP_NE, c2.op_);
+        assertEquals(Assertion.OP_NE, c2.op_);
     }
 	
     @Test

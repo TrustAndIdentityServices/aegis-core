@@ -15,24 +15,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.ebayopensource.aegis.Action;
 import org.ebayopensource.aegis.Advice;
-import org.ebayopensource.aegis.Condition;
+import org.ebayopensource.aegis.Assertion;
 import org.ebayopensource.aegis.Decision;
 import org.ebayopensource.aegis.Effect;
 import org.ebayopensource.aegis.Environment;
 import org.ebayopensource.aegis.Expression;
+import org.ebayopensource.aegis.Rule;
+import org.ebayopensource.aegis.Target;
 import org.ebayopensource.aegis.md.MetaData;
 import org.ebayopensource.aegis.Policy;
 import org.ebayopensource.aegis.PolicyDecisionPoint;
 import org.ebayopensource.aegis.PolicyStore;
-import org.ebayopensource.aegis.Resource;
-import org.ebayopensource.aegis.Subject;
 import org.ebayopensource.aegis.debug.Debug;
-import org.ebayopensource.aegis.plugin.ActionEvaluator;
-import org.ebayopensource.aegis.plugin.ConditionEvaluator;
-import org.ebayopensource.aegis.plugin.ResourceEvaluator;
-import org.ebayopensource.aegis.plugin.SubjectEvaluator;
+import org.ebayopensource.aegis.plugin.AssertionEvaluator;
+import org.ebayopensource.aegis.plugin.TargetEvaluator;
+import org.ebayopensource.aegis.plugin.RuleEvaluator;
 
 /**
   * Embedded PDP implementation
@@ -40,10 +38,12 @@ import org.ebayopensource.aegis.plugin.SubjectEvaluator;
 public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
 {
     
-    static private volatile List<Policy> policyCache = null;
+    static private volatile List<Policy> s_policyCache = null;
     //static private volatile MedaData md = null;
     private static final String POLICYSTORE_CLASS_PROP = "PolicyStoreClass";
     private static final String DEFAULT_POLICYSTORE_CLASS = "org.ebayopensource.aegis.impl.JSONPolicyStore";
+    Properties m_props = null;
+    PolicyStore m_ps = null;
 
     /**
       * gets a policy <code>Decision</code> for a given input params :
@@ -53,31 +53,24 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
       *  @param env context of the request
       *  @return Decision
       */
-    public Decision getPolicyDecision(List<Subject> subjects, Resource resource, Action action, List<Environment> env) 
+    public Decision getPolicyDecision(Target target, List<Environment> env) 
     {
         // Get relevant policies
-        // TODO :_ps query policies...
+        // TODO :m_ps query policies...
         // For now use in memory cache 
         Debug.message("PolicyEval", "Start getPolicyDecision");
    
         Decision decision = new Decision(Effect.UNKNOWN);
         // For each policy, execute the conditions - accumulate results from each.
-        for (Policy policy : policyCache) {
+        for (Policy policy : s_policyCache) {
             Debug.message("PolicyEval", "getPolicyDecision:check for policy : "+policy);
             
             try {
-                // Check for subject match
-                if (!subjectMatches(subjects, policy.getSubjects(), env))
+                if (!targetMatches(target, policy.getTargets(), env))
                     continue;
-                // Check for resource match
-                if (!resourceMatches(resource, policy.getResources(), env))
-                    continue;
-                // Check for action match
-                if (!actionMatches(action, policy.getActions(), env))
-                    continue;
-                // Check Conditions and collect applicable Obligations and Advices
+                // Check Rules and collect applicable Obligations and Advices
                 int effect = policy.getEffect().get();
-                Decision conditionDecision = conditionMatches(policy.getConditions(), env, (effect == Effect.PERMIT));
+                Decision conditionDecision = ruleMatches(policy.getRules(), env, (effect == Effect.PERMIT));
                 
                 // Perform conflict resolution Phase 1
                 MetaData.getConflictResolver().resolve(policy, decision, conditionDecision);
@@ -95,182 +88,139 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
         // Construct final Decision
         return decision;
     }
-    private boolean subjectMatches(List<Subject> reqsubjects, Expression<Subject> psubs, List<Environment> env)
-    {
-        boolean match = false;
-        if (psubs == null || psubs.getMembers() == null || psubs.getMembers().size() == 0)
-            match =  true; // Empty is same as ANY subject)
 
-        int combiner = Expression.ANY_OF;
-        if (! match) {
-            ArrayList<Object>  policymembers = psubs.getMembers();
-            combiner = psubs.getType(); //ANY_OF, ALL_OF, NOT 
-        
-            for  (Object ps : policymembers) {
-                Debug.message("PolicyEval", "subjectMatches: pol member: "+ps);
-                if (ps instanceof Subject) {
-                    Subject polSubject = (Subject) ps;
-                    // Get Eval class..
-                    SubjectEvaluator seval = MetaData.getSubjectEvaluator(polSubject.getType());
-                    for (Subject subject : reqsubjects) {
-                        Debug.message("PolicyEval", "subjectMatches: trying req subject : "+subject);
-                        String type = subject.getType();
-                        //if (type.equals(polSubject.getType())) { // TODO move type checkling to evaluator
-                            try {
-                                match = seval.evaluate(subject, polSubject, env);
-                            } catch(Exception ex) {
-                                // TODO simply ignore, log error and continue for now..
-                                Debug.error("PolicyEval", "getPolicyDecision:subjectMatches=",ex);
-                                continue;
-                            }
-                        //}
-                        if (match) // Single match is enough 
-                            break;
-                    }
-                } else {
-                    Expression<Subject> polsubjectExpr = (Expression<Subject>) ps;
-                    match = subjectMatches(reqsubjects, polsubjectExpr, env);
-                }
-                // Check combiner rules..
-                if (combiner == Expression.ALL_OF && match == false)
-                    return false; // We are done here
-                if (combiner == Expression.ANY_OF && match == true)
-                    return true; // We are done here
-            }
-        }
-        if (combiner == Expression.NOT)
-            return !match;
-        else
-            return match;
-    }
-    private boolean resourceMatches(Resource reqresource, List<Resource> presources, List<Environment> env)
+    private boolean targetMatches(Target reqtarget, List<Target> ptargets, List<Environment> env)
     {
         boolean match = false;
-        Debug.message("PolicyEval", "resourceMatches: start: "+reqresource);
-        if (presources == null || presources.size() == 0)
-            match =  true; // Empty is same as ANY resource
+        Debug.message("PolicyEval", "targetMatches: start: "+reqtarget);
+        if (ptargets == null || ptargets.size() == 0)
+            match =  true; // Empty is same as ANY target
         if (!match) {
             // Get Eval class..
-            ResourceEvaluator reval = MetaData.getResourceEvaluator(reqresource.getType());
-            for (Resource pres : presources) {
-                Debug.message("PolicyEval", "resourceMatches: pres=: "+pres);
+            TargetEvaluator reval = MetaData.getTargetEvaluator(reqtarget.getType());
+            for (Target pres : ptargets) {
+                Debug.message("PolicyEval", "targetMatches: pres=: "+pres);
                 try {
-                    if (reval.evaluate(reqresource, pres, env)) {
+                    if (reval.evaluate(reqtarget, pres, env)) {
                        match = true;
                        break;
                     }
                 } catch(Exception ex) {
                     // TODO simply ignore, log error and continue for now..
-                    Debug.error("PolicyEval", "getPolicyDecision:resourcetMatches=",ex);
+                    Debug.error("PolicyEval", "getPolicyDecision:targetMatches=",ex);
                     continue;
                 }
             }
         } 
-        Debug.message("PolicyEval", "resourceMatches: returning: "+match);
+        Debug.message("PolicyEval", "targetMatches: returning: "+match);
         return match;
     }
-    private boolean actionMatches(Action reqaction, List<Action> pactions, List<Environment> env)
-    {
-        boolean match = false;
-        if (pactions == null || pactions.size() == 0)
-            match =  true; // Empty is same as ANY action
-        if (!match) {
-            // Get Eval class..
-            ActionEvaluator aeval = MetaData.getActionEvaluator(reqaction.getType());
-            for (Action pact : pactions) {
-                try {
-                    if (aeval.evaluate(reqaction, pact, env)) {
-                       match = true;
-                       break;
-                    }
-                } catch(Exception ex) {
-                    // TODO simply ignore, log error and continue for now..
-                    Debug.error("PolicyEval", "getPolicyDecision:actiontMatches=",ex);
-                    continue;
-                }
-            }
-
-        } 
-        return match;
-    }
-
     // TODO : process collect advices - advice collection for PERMIT policies only
-    private Decision conditionMatches(Expression<Condition> pconds, List<Environment> env, boolean collectadvices)
+    private Decision ruleMatches(Expression<Rule> prules, List<Environment> env, boolean collectadvices)
     {
      
-        Debug.message("PolicyEval", "conditionMatches: start: "+pconds);
+        Debug.message("PolicyEval", "ruleMatches: start: "+prules);
         boolean finalmatch = false;
         Decision finaldecision = new Decision(Decision.CONDITION_NOMATCH);
         boolean match = false;
-        if (pconds == null || pconds.getMembers() == null || 
-            pconds.getMembers().size() == 0) {
+        if (prules == null || prules.getMembers() == null || 
+            prules.getMembers().size() == 0) {
             finalmatch = match =  true; // Empty is same as no conditions
             finaldecision.setType(Decision.CONDITION_MATCH);
         }
 
-        int combiner = Expression.ANY_OF;
+        int combiner = Expression.ALL_OF;
         if (! match) {
-            ArrayList<Object>  policymembers = pconds.getMembers();
-            combiner = pconds.getType(); //ANY_OF, ALL_OF, NOT 
+            ArrayList<Object>  policymembers = prules.getMembers();
+            combiner = prules.getType(); //ANY_OF, ALL_OF
         
-            for  (Object ps : policymembers) {
-                Debug.message("PolicyEval", "conditionMatches: pol member: "+ps);
+            for  (Object obj : policymembers) {
+                Rule rule = (Rule) obj;
+                Debug.message("PolicyEval", "ruleMatches: pol member: "+rule);
                 Decision d = null;
-                if (ps instanceof Condition) {
-                    Condition polcondition = (Condition) ps;
-                    // Get Eval class..
-                    ConditionEvaluator seval = MetaData.getConditionEvaluator(polcondition.getType());
+                // Get Eval class..
+                RuleEvaluator seval = MetaData.getRuleEvaluator(rule.getCategory());
+                if (seval != null) {
                     try {
-                        d = seval.evaluate(polcondition, env);
+                        d = seval.evaluate(rule, env);
                         match = (d.getType() == Decision.CONDITION_MATCH);
-                        Debug.message("PolicyEval", "conditionMatches: condeval: "+polcondition+ " match="+match);
+                            Debug.message("PolicyEval", "ruleMatches: ruleeval: "+rule+ " match="+match);
                     } catch(Exception ex) {
                         // TODO simply ignore, log error and continue for now..
-                        Debug.error("PolicyEval", "getPolicyDecision:conditionMatches=",ex);
+                        Debug.error("PolicyEval", "getPolicyDecision:ruleMatches=",ex);
                         continue;
                     }
                 } else {
-                    Expression<Condition> polconditionExpr = (Expression<Condition>) ps;
-                    d = conditionMatches(polconditionExpr, env, collectadvices);
-                    match = (d.getType() == Decision.CONDITION_MATCH);
-                    
-                }
-
-                // Check combiner rules..
-                if (combiner == Expression.ALL_OF && match == false)
-                    finalmatch= false; // We are done here
-                if (combiner == Expression.ANY_OF && match == true) {
-                    finalmatch = true; // We are done here
-                    finaldecision.setType(Decision.CONDITION_MATCH);
-                    finaldecision.resetAdvices();
-                }
-                // aggregate advices and obligations if we are currently heading towards a non-match so far
-                if (match == false && finalmatch == false) {
-                    finaldecision.setType(Decision.CONDITION_NOMATCH);
-                    List<Advice> curradvices = d.getAdvices();
-                    if (curradvices != null){
-                        for (Advice cadvice : curradvices) {
-                            finaldecision.addAdvice(cadvice);
+                    // Iterate thru Assertions
+                    Expression<Assertion> assertions = rule.getExpression();
+                    int acombiner = assertions.getType(); //ANY_OF, ALL_OF
+                    ArrayList<Object>  assmembers = assertions.getMembers();
+                    boolean afinalmatch = false;
+                    Decision afinaldecision = new Decision(Decision.CONDITION_NOMATCH);
+                    boolean amatch = false;
+                    Decision adecision = new Decision(Decision.CONDITION_NOMATCH);
+                    for  (Object aobj : assmembers) {
+                        Assertion assertion = (Assertion) aobj;
+                        Decision da = null;
+                        AssertionEvaluator aeval = MetaData.getAssertionEvaluator(assertion.getCategory());
+                        if (aeval != null) {
+                            try {
+                                da = aeval.evaluate(assertion, env);
+                                amatch = (da.getType() == Decision.CONDITION_MATCH);
+                                Debug.message("PolicyEval", "ruleMatches: asserteval: "+rule+ " amatch="+amatch);
+                                // Check combiner rules..
+                                afinalmatch = processDecision( da, amatch, acombiner, afinaldecision, afinalmatch); 
+                            } catch(Exception ex) {
+                                // TODO simply ignore, log error and continue for now..
+                                Debug.error("PolicyEval", "getPolicyDecision:ruleMatches=",ex);
+                                continue;
+                            }
                         }
                     }
+                    d = afinaldecision;
+                    match = afinalmatch;
                 }
+                // Check combiner rules..
+                finalmatch = processDecision( d, match, combiner, finaldecision, finalmatch) ;
 
             }
         }
-        // TODO : Propose Expression.NOT NOT BE SUPPPORTED for Conditions - it creates unnecessary complications.
         return finaldecision;
     }
+
+    private boolean processDecision(Decision d, boolean match, int combiner,
+                                    Decision finaldecision, boolean finalmatch) 
+    {
+        // Check combiner rules..
+        if (combiner == Expression.ALL_OF && match == false)
+            finalmatch= false; // We are done here
+        if (combiner == Expression.ANY_OF && match == true) {
+            finalmatch = true; // We are done here
+            finaldecision.setType(Decision.CONDITION_MATCH);
+            finaldecision.resetAdvices();
+        }
+        // aggregate advices and obligations if we are currently heading towards a non-match so far
+        if (match == false && finalmatch == false) {
+            finaldecision.setType(Decision.CONDITION_NOMATCH);
+            List<Advice> curradvices = d.getAdvices();
+            if (curradvices != null){
+                for (Advice cadvice : curradvices) {
+                    finaldecision.addAdvice(cadvice);
+                }
+            }
+        }
+        return finalmatch;
+    }
+
     public void initialize(Properties props) throws Exception
     {
-        _props = props;
+        m_props = props;
         // setup PolicyStore
         String pcl = props.getProperty(POLICYSTORE_CLASS_PROP);
         if (pcl == null)
             pcl = DEFAULT_POLICYSTORE_CLASS;
-        _ps  = (PolicyStore) Class.forName(pcl).newInstance();
+        m_ps  = (PolicyStore) Class.forName(pcl).newInstance();
         // Cache all policies in memory
-        policyCache = _ps.getAllPolicies();
+        s_policyCache = m_ps.getAllPolicies();
     }
-    Properties _props = null;
-    PolicyStore _ps = null;
 }

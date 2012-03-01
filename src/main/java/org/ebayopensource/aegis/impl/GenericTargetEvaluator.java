@@ -14,22 +14,22 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.ebayopensource.aegis.Environment;
-import org.ebayopensource.aegis.Resource;
-import org.ebayopensource.aegis.plugin.ResourceEvaluator;
+import org.ebayopensource.aegis.Target;
+import org.ebayopensource.aegis.plugin.TargetEvaluator;
 
 /**
-  * This class evaluates a Resource based on the data in the context.
+  * This class evaluates a Target based on the data in the context.
   * Restrictions:
   * All data it needs must be available in the input <code>context</code>
   * Only primitive types that respond correctly to <code>java.lang.Comparable</code> are acceptable
   * TODO : add collection support ( if (x instanceof Collection<?>){})
   */
-public class GenericResourceEvaluator implements ResourceEvaluator
+public class GenericTargetEvaluator implements TargetEvaluator
 {
     public void initialize(HashMap props) 
     {
     }
-    public boolean evaluate(Resource reqresource, Resource polresource, List<Environment>  context) throws Exception
+    public boolean evaluate(Target reqresource, Target polresource, List<Environment>  context) throws Exception
     {
         // TODO, check types and  evaluate attributes. For now simply return resource name match
         return reqresource.getName().equals(polresource.getName());

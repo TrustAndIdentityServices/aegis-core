@@ -14,9 +14,9 @@ import java.util.ArrayList;
 
 public class InvalidParameterException extends PolicyException
 {
-    private static final String errorid = "INVALID_PARAM";
-    private static final String msg = "One or more input params is invalid";
+    private static final String s_errorid = "INVALID_PARAM";
+    private static final String s_msg = "One or more input params is invalid";
     public InvalidParameterException() {
-        super (errorid, msg);
+        super (s_errorid, s_msg);
     }
 }

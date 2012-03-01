@@ -16,83 +16,68 @@ import java.util.ArrayList;
   *  <code> 
   *   ANY_OF { Subject1, Subject2, Subject3 }
   *   ALL_OF { Subject1, Subject2, Subject3 }
-  *   NOT { Subject1, Subject2, Subject3 }
   * </code>
   */
 public class Expression<T>
 {
-    final public static int ANY_OF =0;
-    final public static int ALL_OF =1;
-    final public static int NOT =2; // TODO : rename to "NONE_OF"? or restrict to single member?
+    final public static int ALL_OF =0;
+    final public static int ANY_OF =1;
 
     final public static String ANY_OF_STR = "ANY_OF";
     final public static String ALL_OF_STR = "ALL_OF";
-    final public static String NOT_STR = "NOT";
+
+    private int m_type = ALL_OF;
+    private ArrayList<Object> m_members;
+    private static String m_strs[] = {ALL_OF_STR, ANY_OF_STR };
 
     public void setType(int type) 
     {
-        _type = type;
+        m_type = type;
     }
     public int getType() 
     {
-        return _type;
+        return m_type;
     }
     public void add(T data)
     {
-        if (_members == null)
-            _members = new ArrayList<Object>();
-        _members.add(data);
-        // TODO : add check if we want a single mmeber for NOT
+        if (m_members == null)
+            m_members = new ArrayList<Object>();
+        m_members.add(data);
     }
     public void add(Expression<T> data)
     {
-        if (_members == null)
-            _members = new ArrayList<Object>();
-        _members.add(data);
-        // TODO : add check if we want a single mmeber for NOT
+        if (m_members == null)
+            m_members = new ArrayList<Object>();
+        m_members.add(data);
     }
     public ArrayList<Object> getMembers()
     {
-        return  _members;
+        return  m_members;
     }
-    public String toString()
+
+    public String toString(boolean shortform)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(_strs[getType()]).append(" { ");
-        if ( _members != null) {
-            for (Object ob : _members) {
+        if (!shortform) {
+            sb.append("\"").append(m_strs[getType()]).append("\" : ");
+        }
+        sb.append("[ ");
+        boolean first = true;
+        if ( m_members != null) {
+            for (Object ob : m_members) {
+                if (first)
+                    first = false;
+                else
+                    sb.append(", ");
                 sb.append(ob.toString()).append(" "); 
             }
         } 
-        sb.append("} ");
+        sb.append("] ");
         return sb.toString();
     }
-    private int _type = ANY_OF;
-    private ArrayList<Object> _members;
-    private static String _strs[] = {ANY_OF_STR, ALL_OF_STR, NOT_STR };
-
-    public static void main(String[] args)
+    public String toString()
     {
-        Expression<String> e1 = new Expression<String>();
-        e1.setType(0);
-        e1.add("Role1");
-        e1.add("Role2");
-        e1.add("Role3");
-        System.out.println(" e1= "+e1.toString());
-
-        Expression<String> e2 = new Expression<String>();
-        e2.setType(1);
-        e2.add("G1");
-        e2.add("G2");
-        e2.add("G3");
-
-        System.out.println(" e2= "+e2.toString());
-        Expression<String> e = new Expression<String>();
-        e.setType(2);
-        e.add(e1);
-        e.add(e2);
-
-        System.out.println(" e= "+e.toString());
-
+        return toString(false);
     }
+
 }

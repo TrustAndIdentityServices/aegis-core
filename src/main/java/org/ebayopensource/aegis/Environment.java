@@ -13,6 +13,10 @@ package org.ebayopensource.aegis;
 import java.util.HashMap;
 public class Environment
 {
+    private String m_type = null;
+    private String m_name = null;
+    private HashMap<String,Object> m_attrs = null;
+
     /**
      * Constructs a Environment 
      * @param type environment type 
@@ -20,8 +24,8 @@ public class Environment
      */
     public Environment(String type, String name)
     {
-        _type = type;
-        _name = name;
+        m_type = type;
+        m_name = name;
     }
 
     /**
@@ -31,10 +35,10 @@ public class Environment
      */
     public void setAttribute(String id, Object value)
     {
-        if (_attrs == null) {
-            _attrs = new HashMap<String,Object>();
+        if (m_attrs == null) {
+            m_attrs = new HashMap<String,Object>();
         }
-        _attrs.put(id, value);
+        m_attrs.put(id, value);
     }
 
     /**
@@ -43,7 +47,7 @@ public class Environment
      */
     public String getName()
     {
-        return _name;
+        return m_name;
     }
 
     /**
@@ -52,7 +56,7 @@ public class Environment
      */
     public String getType()
     {
-        return _type;
+        return m_type;
     }
 
 
@@ -64,11 +68,8 @@ public class Environment
     public Object getAttribute(String id)
     {
         Object val = null;
-        if (_attrs != null)
-            val = _attrs.get(id);
+        if (m_attrs != null)
+            val = m_attrs.get(id);
         return val;
     }
-    private String _type = null;
-    private String _name = null;
-    private HashMap<String,Object> _attrs = null;
 }

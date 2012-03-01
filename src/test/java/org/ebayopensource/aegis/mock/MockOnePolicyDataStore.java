@@ -13,14 +13,14 @@ package org.ebayopensource.aegis.mock;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.ebayopensource.aegis.Action;
-import org.ebayopensource.aegis.Condition;
+import org.ebayopensource.aegis.Assertion;
 import org.ebayopensource.aegis.Effect;
 import org.ebayopensource.aegis.Expression;
 import org.ebayopensource.aegis.Policy;
 import org.ebayopensource.aegis.PolicyStore;
-import org.ebayopensource.aegis.Resource;
-import org.ebayopensource.aegis.Subject;
+import org.ebayopensource.aegis.Rule;
+import org.ebayopensource.aegis.Target;
+import org.ebayopensource.aegis.debug.Debug;
 
 /**
   * Mock for a single policy :
@@ -43,31 +43,35 @@ public class MockOnePolicyDataStore implements PolicyStore
     }
     public List<Policy> getAllPolicies()
     {
-        Expression<Subject> subjects = new Expression<Subject>();
-        Subject sub1 = new Subject("role", "manager");
-        subjects.add(sub1);
+        ArrayList<Target> targets = new ArrayList<Target>();
+        Target target1 = new Target("web", "http://www.ebay.com/xxx");
+        Target target2 = new Target("webcmd", "addItem");
+        targets.add(target1);
+        targets.add(target2);
 
-        List<Resource> resources = new ArrayList<Resource>();
-        Resource res1 = new Resource("web","http://www.ebay.com/xxx" );
-        resources.add(res1);
+        Expression<Rule> rules = new Expression<Rule>();
+        rules.setType(Expression.ALL_OF);
 
-        List<Action> actions = new ArrayList<Action>();
-        Action action1 = new Action("webcmd", "addItem");
-        actions.add(action1);
+
+        Expression<Assertion> exp1 = new Expression<Assertion>();
+        exp1.setType(Expression.ALL_OF);
+        Assertion a1 = new Assertion("authn", "assertion1");
+        a1.setCExpr( "authn.level", Assertion.OP_GT,  new Integer(2));
+
+        exp1.add(a1);
+
+        Rule rule1 = new Rule("category1", "rule1", exp1);
+        rules.add(rule1);
+
+        rules.add(rule1);
 
         Effect effect = new Effect(Effect.PERMIT);
-
-        Expression<Condition> conditions = new Expression<Condition>();
-        Condition cond1 = new Condition("authn", "authncondition1");
-        cond1.addExpr("authn.level", Condition.OP_GT,  new Integer(2));
-        cond1.addExpr("authn.idp", Condition.OP_EQ,  "EBAY");
-
-        conditions.add(cond1);
-
-        Policy pol1 = new Policy(subjects, resources, actions, effect, conditions);
+        Policy pol = new Policy("testPolicy", "TEST Policy", targets, rules, effect);
 
         List<Policy> policies = new ArrayList<Policy>();
-        policies.add(pol1);
+        policies.add(pol);
+        Debug.message("MockOnePolicyStore", "policy="+pol);
+
         return policies;
     }
     public void createPolicy(Policy policy)

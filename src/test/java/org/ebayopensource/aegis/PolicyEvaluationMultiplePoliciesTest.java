@@ -21,7 +21,7 @@ import org.ebayopensource.aegis.debug.Debug;
 import org.junit.Before;
 import org.junit.Test;
 
-public class PolicyEvaluationTest
+public class PolicyEvaluationMultiplePoliciesTest
 {
     private PolicyDecisionPoint pdp = null;
     @Before
@@ -29,7 +29,7 @@ public class PolicyEvaluationTest
     {
         try {
             Properties props = new Properties();
-            URL url = ClassLoader.getSystemResource("PDPOnePolicyDataStore.properties");
+            URL url = ClassLoader.getSystemResource("PDP.properties");
             props.load(url.openStream());
             pdp = PolicyEnforcementPoint.getPDP(props);
         } catch (Exception ex) {
@@ -38,8 +38,13 @@ public class PolicyEvaluationTest
     }
 
     @Test
-    public void testSimpleAdvice() {
-        Target resource = new Target("web", "http://www.ebay.com/xxx");
+    public void testPolicyStore() {
+
+    }
+    
+    @Test
+    public void testNoTargetMatch() {
+        Target resource = new Target("web", "http://www.ebay.com/NOMATCH");
         List<Environment> env = new ArrayList<Environment>();
         Environment env1 = new Environment("session", "env1");
         env1.setAttribute("authn.level", new Integer(0));
@@ -53,8 +58,21 @@ public class PolicyEvaluationTest
         // Decision should be DENY
         assertEquals(Decision.EFFECT_DENY, decision.getType());
         List<Advice> advs = decision.getAdvices();
+        assertEquals(true, advs == null);
+    }
+
+    @Test
+    public void testTargetMatchWithAdvices() {
+        Target resource = new Target("web", "http://www.ebay.com/yyy");
+        List<Environment> env = new ArrayList<Environment>();
+        Decision decision = 
+            pdp.getPolicyDecision( resource, env);
+        Debug.message("TEST", decision.toString());
+        // Decision should not be null
+        assertEquals(true, decision != null);
+        // Decision should be DENY
+        assertEquals(Decision.EFFECT_DENY, decision.getType());
+        List<Advice> advs = decision.getAdvices();
         assertEquals(true, advs != null);
-        assertEquals(2, advs.size());
-        
     }
 }

@@ -20,15 +20,19 @@ public class Decision
     static public final int EFFECT_UNKNOWN = 2;
     static public final int CONDITION_MATCH = 3;
     static public final int CONDITION_NOMATCH = 4;
-    static String[] _strs = 
+    static String[] s_strs = 
               { "DENY", "PERMIT", "UNKNOWN", "COND_MATCH", "COND_NOMATCH"};
+    private int m_type = 0;
+    private ArrayList<Obligation> m_obligations = null;
+    private ArrayList<Advice> m_advices = null;
+
     /**
      * Constructs a Decision 
      * @param type decision type (eg Allow, Deny, Unknown)
      */
     public Decision(int type)
     {
-        _type = type;
+        m_type = type;
     }
     /**
      * Sets decision type
@@ -36,7 +40,7 @@ public class Decision
      */
     public void setType(int type)
     {
-        _type = type;
+        m_type = type;
     }
 
     /**
@@ -44,7 +48,7 @@ public class Decision
      */
     public String getTypeStr()
     {
-        return _strs[_type];
+        return s_strs[m_type];
     }
 
     /**
@@ -53,10 +57,10 @@ public class Decision
      */
     public void addObligation(Obligation o)
     {
-        if (_obligations == null) {
-            _obligations = new ArrayList<Obligation>();
+        if (m_obligations == null) {
+            m_obligations = new ArrayList<Obligation>();
         }
-        _obligations.add(o);
+        m_obligations.add(o);
     }
 
     /**
@@ -65,10 +69,10 @@ public class Decision
      */
     public void addAdvice(Advice a)
     {
-        if (_advices == null) {
-            _advices = new ArrayList<Advice>();
+        if (m_advices == null) {
+            m_advices = new ArrayList<Advice>();
         }
-        _advices.add(a);
+        m_advices.add(a);
     }
     /**
      * Retrieve decison type
@@ -76,7 +80,7 @@ public class Decision
      */
     public int getType()
     {
-        return _type;
+        return m_type;
     }
 
     /**
@@ -85,7 +89,7 @@ public class Decision
      */
     public List<Obligation> getObligations()
     {
-        return _obligations;
+        return m_obligations;
     }
 
     /**
@@ -94,7 +98,7 @@ public class Decision
      */
     public List<Advice> getAdvices()
     {
-        return _advices;
+        return m_advices;
     }
 
     /**
@@ -102,7 +106,7 @@ public class Decision
      */
     public void resetObligations()
     {
-        _obligations = null;
+        m_obligations = null;
     }
 
     /**
@@ -110,7 +114,7 @@ public class Decision
      */
     public void resetAdvices()
     {
-        _advices = null;
+        m_advices = null;
     }
 
     public String toString()
@@ -119,7 +123,7 @@ public class Decision
         sbld.append("Decision : { effect : \"").append(getType()).append("\", ") ;
         sbld.append("Obligations: ").append(getObligations()).append(", ");
         sbld.append("Advices: ");
-           if (_advices != null) {
+           if (m_advices != null) {
                for (Advice adv : getAdvices()) {
                   sbld.append(adv);
                }
@@ -128,7 +132,4 @@ public class Decision
         return sbld.toString();
     }
 
-    private int _type = 0;
-    private ArrayList<Obligation> _obligations = null;
-    private ArrayList<Advice> _advices = null;
 }

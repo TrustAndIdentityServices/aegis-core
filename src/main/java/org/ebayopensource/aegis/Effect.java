@@ -17,21 +17,44 @@ public class Effect
     final public static int UNKNOWN = 2;
     static final public int MAX = 2;
 
+    private static String s_str[] = {"DENY", "PERMIT", "UNKNOWN" };
+    private int m_effect;
+
     public Effect(int e)
     {
         if (e > MAX )
             throw new InvalidParameterException();
-        _effect = e;
+        m_effect = e;
+    }
+    public Effect(String s)
+    {
+        int e =  convertFromString(s);
+        if (e > MAX || e < 0 )
+            throw new InvalidParameterException();
+        m_effect = e;
     }
     public int get()
     {
-        return _effect;
+        return m_effect;
     }
     public void set( int e)
     {
         if (e > MAX )
             throw new InvalidParameterException();
-        _effect = e;
+        m_effect = e;
     }
-    private int _effect;
+    public String toString()
+    {
+         StringBuilder bld = new StringBuilder();
+         bld.append("\"effect\" : ").append("\"").append(s_str[get()]).append("\"");
+         return bld.toString();
+    }
+    private int convertFromString(String str)
+    {
+         for (int i = 0; i < s_str.length; i++) {
+             if (s_str[i].equalsIgnoreCase(str)) 
+                 return i;
+         }
+         return -1;
+    }
 }

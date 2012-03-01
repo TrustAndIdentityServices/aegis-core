@@ -16,14 +16,10 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
 	AdviceTest.class,
-	ActionTest.class,
-	ConditionTest.class,
 	EffectTest.class,
 	EnvironmentTest.class,
 	ObligationTest.class,
-	PolicyEvaluationTest.class,
-	ResourceTest.class,
-	SubjectTest.class	
+	PolicyEvaluationTest.class
 })
 public class AllTests {
 

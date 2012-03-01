@@ -14,13 +14,17 @@ import java.util.ArrayList;
 
 public class Advice
 {
+    private String m_type = null;
+    private ArrayList<CExpr> m_attrs = null;
+    static private String[] s_strs = { "=", "!=", "<", ">" };
+
     /**
      * Constructs a Advice 
      * @param type advice type 
      */
     public Advice(String type)
     {
-        _type = type;
+        m_type = type;
     }
 
     /**
@@ -29,7 +33,7 @@ public class Advice
      */
     public String getType()
     {
-        return _type;
+        return m_type;
     }
 
     /**
@@ -39,12 +43,12 @@ public class Advice
      */
     public void addExpr(String id, int op,  Object value)
     {
-        if (op > Condition.OP_MAX || id == null || value == null) {
+        if (op > Assertion.OP_MAX || id == null || value == null) {
             throw new InvalidParameterException();
         }
-        if (_attrs == null)
-            _attrs = new ArrayList<CExpr>();
-        _attrs.add(new CExpr(id, op, value));
+        if (m_attrs == null)
+            m_attrs = new ArrayList<CExpr>();
+        m_attrs.add(new CExpr(id, op, value));
     }
 
     /**
@@ -53,7 +57,7 @@ public class Advice
      */
     public ArrayList<CExpr>  getAllExpr()
     {
-        return _attrs;
+        return m_attrs;
     }
 
     /**
@@ -62,19 +66,16 @@ public class Advice
      */
     public String toString()
     {
-        if (_attrs == null)
+        if (m_attrs == null)
             return "";
         StringBuilder sb = new StringBuilder();
         int i = 0;
         
-        for (CExpr e : _attrs) {
+        for (CExpr e : m_attrs) {
             if (i++ > 0)
                sb.append(" AND ");
-            sb.append("( ").append(e.id_).append(" ").append(strs[e.op_]).append(" ").append(e.val_).append(" )");
+            sb.append("( ").append(e.id_).append(" ").append(s_strs[e.op_]).append(" ").append(e.val_).append(" )");
         }
         return sb.toString();
     }
-    private String _type = null;
-    private ArrayList<CExpr> _attrs = null;
-    static private String[] strs = { "=", "!=", "<", ">" };
 }

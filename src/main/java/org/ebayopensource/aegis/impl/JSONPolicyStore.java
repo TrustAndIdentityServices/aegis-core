@@ -16,14 +16,13 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.ebayopensource.aegis.Action;
-import org.ebayopensource.aegis.Condition;
+import org.ebayopensource.aegis.Assertion;
 import org.ebayopensource.aegis.Effect;
 import org.ebayopensource.aegis.Expression;
 import org.ebayopensource.aegis.Policy;
 import org.ebayopensource.aegis.PolicyStore;
-import org.ebayopensource.aegis.Resource;
-import org.ebayopensource.aegis.Subject;
+import org.ebayopensource.aegis.Rule;
+import org.ebayopensource.aegis.Target;
 import org.ebayopensource.aegis.debug.Debug;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -81,104 +80,64 @@ public class JSONPolicyStore implements PolicyStore
         try {
             JSONObject ob = new JSONObject(pol);
             JSONObject policy = ob.getJSONObject("Policy");
-            String str = policy.getString("name");
-            str = policy.getString("effect");
-            Effect effect = new Effect(Integer.parseInt(str));
-            JSONObject j_subjects = policy.getJSONObject("Subjects");
-            Expression<Subject> subjects = new Expression<Subject>();
-
-            String oper = null;
-            int operint = 0;
-            if (j_subjects.has("ANY_OF")) {
-                oper = "ANY_OF";
-                operint = subjects.ANY_OF;
-            } else if (j_subjects.has("ALL_OF")) {
-                oper = "ALL_OF";
-                operint = subjects.ALL_OF;
-            } else {
-                Debug.error("JSONPolicy", "parsePolicy:invalid subj expr:"+pol1);
-                return null;
-            }
-            subjects.setType(operint);
+            Debug.message("JSONPolicyStore", "parsePolicy:policy="+policy); 
+            String name = policy.getString("name");
+            String desc = policy.getString("description");
+            String str = policy.getString("effect");
+            Debug.message("JSONPolicyStore", "parsePolicy:effect="+str); 
+            Effect effect = new Effect(str);
            
-            JSONArray arrayob = j_subjects.getJSONArray(oper);
-            
-            int cnt = arrayob.length();
-            for (int i = 0; i < cnt; i++) {
-                ob = arrayob.getJSONObject(0);
-                JSONObject subob = ob.getJSONObject("Subject");
-       
-                Subject sub1 = new Subject(subob.getString("type"), subob.getString("name"));
-                subjects.add(sub1);
-    
-            }
-            JSONArray j_resources = policy.getJSONArray("Resources");
-            List<Resource> resources = null;
-            for (int i = 0; i < j_resources.length(); i++) {
-                ob = j_resources.getJSONObject(i);
-                JSONObject resob = ob.getJSONObject("Resource");
-                if (resources == null) {
-                    resources = new ArrayList<Resource>();
+            JSONArray j_targets = policy.getJSONArray("target");
+            List<Target> targets = null;
+            for (int i = 0; i < j_targets.length(); i++) {
+                JSONArray arr = j_targets.getJSONArray(i);
+                String ttype = arr.getString(0);
+                String tval = arr.getString(1);;
+                if (targets == null) {
+                    targets = new ArrayList<Target>();
                 }
-                Resource res1 = new Resource(resob.getString("type"),resob.getString("name") );
-                resources.add(res1);
+                Target res1 = new Target(ttype, tval );
+                targets.add(res1);
             }
-            JSONArray j_actions = policy.getJSONArray("Actions");
-            List<Action> actions = null;
-            for (int i = 0; i < j_actions.length(); i++) {
-                ob = j_actions.getJSONObject(i);
-                JSONObject actob = ob.getJSONObject("Action");
-                if (actions == null)
-                    actions = new ArrayList<Action>();
-                Action ac1 = new Action(actob.getString("type"),actob.getString("name") );
-                actions.add(ac1);
-            }
-            JSONObject j_conditions = policy.getJSONObject("Conditions");
-            oper = null;
-            if (j_conditions.has("ANY_OF")) {
-                oper = "ANY_OF";
-                operint = Expression.ANY_OF;
-            } else if (j_conditions.has("ALL_OF")) {
-                oper = "ALL_OF";
-                operint = Expression.ALL_OF;
-            } else {
-                Debug.error("JSONPolicy", "parsePolicy:invalid cond expr:"+pol1);
-                return null;
-            }
-            arrayob = j_conditions.getJSONArray(oper);
-            cnt = arrayob.length();
-            Expression<Condition> conditions = new Expression<Condition>();
-            conditions.setType(operint);
-            for (int j = 0; j < cnt; j++) {
-                ob = arrayob.getJSONObject(j);
-                JSONObject condob = ob.getJSONObject("Condition");
-                String ctype = condob.getString("type");
-                String cname = condob.getString("name");
-                Condition cond1 = new Condition(ctype, cname);
-                JSONArray exprs = condob.getJSONArray("expr");
 
-                int totexprs = exprs.length();
-                Debug.message("JSONPolicy", "Parse: tot="+totexprs+":"+exprs);
-                for (int i = 0; i < totexprs; i++) {
-                    JSONObject expr = exprs.getJSONObject(i);
-                    String op = expr.getString("op");
-                    int opi = 0;
-                    for (String opstr : Condition.ops ) {
-                        if (opstr.equals(op)) 
-                             break;
-                        opi++;
-                    }
-                    cond1.addExpr(expr.getString("name"), opi, expr.get("value"));
+            JSONArray j_rules = policy.getJSONArray("rules");
 
+            Expression<Rule> rules = new Expression<Rule>();
+
+            for (int i = 0; i < j_rules.length() ; i++) {
+                JSONObject j_rule = j_rules.getJSONObject(i);
+                String category = j_rule.getString("category");
+                String oper = null;
+                int operint = 0; // Default 0 okay?
+                if (j_rule.has("ANY_OF")) {
+                    oper = "ANY_OF";
+                    operint = Expression.ANY_OF;
+                } else if (j_rule.has("ALL_OF")) {
+                    oper = "ALL_OF";
+                    operint = Expression.ALL_OF;
                 }
-                conditions.add(cond1);
+                JSONArray arrayob = j_rule.getJSONArray(oper);
+                int cnt = arrayob.length();
+                Expression<Assertion> assertions = new Expression<Assertion>();
+                assertions.setType(operint);
+                for (int j = 0; j < cnt; j++) {
+                    JSONArray j_assertion = arrayob.getJSONArray(j);
+                    String id = j_assertion.getString(0);
+                    String op = j_assertion.getString(1);
+                    String val = j_assertion.getString(2);
+                    Assertion a = new Assertion(category, "");
+                    a.setCExpr(id, op,  val);
+                    assertions.add(a);
+                }
+                Rule rule = new Rule(category, "", assertions);
+                rules.add(rule);
             }
-            pol1 = new Policy(subjects, resources, actions, effect, conditions);
-
+            pol1 = new Policy(name, desc, targets, rules, effect);
 
         } catch (Exception ex) {
             Debug.error("JSONDataStore", "readPolicies: Exception:",ex);
         }
+        Debug.message("JSONPolicyStore", "parsePolicy() : "+pol1.toString());
         return pol1;
     }
 }

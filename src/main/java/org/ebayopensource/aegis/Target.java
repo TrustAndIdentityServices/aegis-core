@@ -11,74 +11,73 @@
 package org.ebayopensource.aegis;
 
 import java.util.HashMap;
-
-public class Action
+public class Target
 {
+    private String m_type = null;
+    private String m_name = null;
+    private HashMap<String,Object> m_attrs = null;
     /**
-     * Constructs a Action 
-     * @param type action type 
-     * @param name name of the action
+     * Constructs a Target 
+     * @param type target type 
+     * @param name name of the target
      */
-    public Action(String type, String name)
+    public Target(String type, String name)
     {
-        _type = type;
-        _name = name;
+        m_type = type;
+        m_name = name;
     }
 
     /**
-     * Sets a action attribute
+     * Sets a target attribute
      * @param id attribute name
      * @param value value
      */
     public void setAttribute(String id, Object value)
     {
-        if (_attrs == null) {
-            _attrs = new HashMap<String,Object>();
+        if (m_attrs == null) {
+            m_attrs = new HashMap<String,Object>();
         }
-        _attrs.put(id, value);
+        m_attrs.put(id, value);
     }
 
     /**
-     * Retrieve action name
+     * Retrieve target name
      * @return name
      */
     public String getName()
     {
-        return _name;
+        return m_name;
     }
 
     /**
-     * Retrieve action type
+     * Retrieve target type
      * @return type
      */
     public String getType()
     {
-        return _type;
+        return m_type;
     }
 
 
     /**
-     * Retrieve action attribute
+     * Retrieve target attribute
      * @param id attr name
      * @return attr value
      */
     public Object getAttribute(String id)
     {
         Object val = null;
-        if (_attrs != null)
-            val = _attrs.get(id);
+        if (m_attrs != null)
+            val = m_attrs.get(id);
         return val;
     }
-    
     public String toString()
     {
          StringBuilder sbld = new StringBuilder();
-         sbld.append("Action : {  type:\"").append(getType()).append("\", ");
-         sbld.append("name : \"").append(getName()).append("\"");
-         sbld.append("}");
+         sbld.append(" [ ");
+         sbld.append(" \"").append(getType()).append("\"");
+         sbld.append(", \"").append(getName()).append("\" ");
+         sbld.append(" ]");
          return sbld.toString();
     }
-    private String _type = null;
-    private String _name = null;
-    private HashMap<String,Object> _attrs = null;
 }

@@ -14,13 +14,16 @@ import java.util.HashMap;
 
 public class Obligation
 {
+    private String m_type = null;
+    private HashMap<String,Object> m_attrs = null;
+
     /**
      * Constructs a Obligation 
      * @param type obligation type 
      */
     public Obligation(String type)
     {
-        _type = type;
+        m_type = type;
     }
 
     /**
@@ -29,7 +32,7 @@ public class Obligation
      */
     public String getType()
     {
-        return _type;
+        return m_type;
     }
 
     /**
@@ -39,9 +42,9 @@ public class Obligation
      */
     public void setAttribute(String id, Object value)
     {
-        if (_attrs == null)
-            _attrs = new HashMap<String,Object>();
-        _attrs.put(id, value);
+        if (m_attrs == null)
+            m_attrs = new HashMap<String,Object>();
+        m_attrs.put(id, value);
     }
 
     /**
@@ -52,11 +55,9 @@ public class Obligation
     public Object getAttribute(String id)
     {
         Object val = null;
-        if (_attrs != null)
-            val = _attrs.get(id);
+        if (m_attrs != null)
+            val = m_attrs.get(id);
         return val;
     }
 
-    private String _type = null;
-    private HashMap<String,Object> _attrs = null;
 }

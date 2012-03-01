@@ -18,15 +18,18 @@ import java.util.ResourceBundle;
 public class PolicyException extends RuntimeException
 {
    
+    private String m_errorid = null;
     public final String RESOURCE_BUNDLE = "PEFMessages";
     public PolicyException(String errorid, String message) 
     {
         super(errorid+":"+message );
+        m_errorid = errorid;
     }
     public String getLocalizedMessage()
     {
         ResourceBundle rb = ResourceBundle.getBundle(RESOURCE_BUNDLE);
-        return  rb.getString(errorid_);
+        if (rb != null)
+            return  rb.getString(m_errorid);
+        return(m_errorid);
     }
-    private String errorid_ = null;
 }

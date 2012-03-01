@@ -13,10 +13,11 @@ package org.ebayopensource.aegis.plugin;
 import java.util.HashMap;
 import java.util.List;
 
-import org.ebayopensource.aegis.Action;
 import org.ebayopensource.aegis.Environment;
-public interface ActionEvaluator
+import org.ebayopensource.aegis.Target;
+
+public interface TargetEvaluator
 {
     public void initialize(HashMap props);
-    public boolean evaluate(Action reqaction, Action polaction, List<Environment>  context) throws Exception;
+    public boolean evaluate(Target reqresource, Target polresource, List<Environment>  context) throws Exception;
 }
