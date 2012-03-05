@@ -36,7 +36,7 @@ public class GenericRuleEvaluator implements RuleEvaluator
     public Decision evaluate(Rule rule, List<Environment> context) throws Exception
     {
         // TODO
-        Decision d = new Decision(Decision.CONDITION_MATCH);
+        Decision d = new Decision(Decision.RULE_MATCH);
         return d;
     }
 }

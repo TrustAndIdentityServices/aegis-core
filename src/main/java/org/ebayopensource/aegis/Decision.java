@@ -18,10 +18,11 @@ public class Decision
     static public final int EFFECT_DENY = 0;
     static public final int EFFECT_PERMIT = 1;
     static public final int EFFECT_UNKNOWN = 2;
-    static public final int CONDITION_MATCH = 3;
-    static public final int CONDITION_NOMATCH = 4;
+    static public final int RULE_INIT = 3;
+    static public final int RULE_MATCH = 4;
+    static public final int RULE_NOMATCH = 5;
     static String[] s_strs = 
-              { "DENY", "PERMIT", "UNKNOWN", "COND_MATCH", "COND_NOMATCH"};
+              { "DENY", "PERMIT", "UNKNOWN", "RULE_MATCH", "RULE_NOMATCH"};
     private int m_type = 0;
     private ArrayList<Obligation> m_obligations = null;
     private ArrayList<Advice> m_advices = null;

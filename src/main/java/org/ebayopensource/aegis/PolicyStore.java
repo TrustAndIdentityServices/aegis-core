@@ -11,8 +11,13 @@
 package org.ebayopensource.aegis;
 
 import java.util.List;
+import java.util.Properties;
+
 public interface PolicyStore
 {
+    public static final String PolicyStoreLocation = "PolicyStoreLocation";
+
+    public void initialize(Properties props);
     public Policy getPolicy(String id);
     public List<Policy> getAllPolicies();
     public void createPolicy(Policy policy);

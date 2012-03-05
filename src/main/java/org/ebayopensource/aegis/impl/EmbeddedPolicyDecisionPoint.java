@@ -21,6 +21,7 @@ import org.ebayopensource.aegis.Decision;
 import org.ebayopensource.aegis.Effect;
 import org.ebayopensource.aegis.Environment;
 import org.ebayopensource.aegis.Expression;
+import org.ebayopensource.aegis.PolicyException;
 import org.ebayopensource.aegis.Rule;
 import org.ebayopensource.aegis.Target;
 import org.ebayopensource.aegis.md.MetaData;
@@ -41,7 +42,6 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
     static private volatile List<Policy> s_policyCache = null;
     //static private volatile MedaData md = null;
     private static final String POLICYSTORE_CLASS_PROP = "PolicyStoreClass";
-    private static final String DEFAULT_POLICYSTORE_CLASS = "org.ebayopensource.aegis.impl.JSONPolicyStore";
     Properties m_props = null;
     PolicyStore m_ps = null;
 
@@ -121,12 +121,12 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
      
         Debug.message("PolicyEval", "ruleMatches: start: "+prules);
         boolean finalmatch = false;
-        Decision finaldecision = new Decision(Decision.CONDITION_NOMATCH);
+        Decision finaldecision = new Decision(Decision.RULE_INIT);
         boolean match = false;
         if (prules == null || prules.getMembers() == null || 
             prules.getMembers().size() == 0) {
-            finalmatch = match =  true; // Empty is same as no conditions
-            finaldecision.setType(Decision.CONDITION_MATCH);
+            finalmatch = match =  true; // Empty is same as no rules
+            finaldecision.setType(Decision.RULE_MATCH);
         }
 
         int combiner = Expression.ALL_OF;
@@ -143,7 +143,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                 if (seval != null) {
                     try {
                         d = seval.evaluate(rule, env);
-                        match = (d.getType() == Decision.CONDITION_MATCH);
+                        match = (d.getType() == Decision.RULE_MATCH);
                             Debug.message("PolicyEval", "ruleMatches: ruleeval: "+rule+ " match="+match);
                     } catch(Exception ex) {
                         // TODO simply ignore, log error and continue for now..
@@ -156,9 +156,9 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                     int acombiner = assertions.getType(); //ANY_OF, ALL_OF
                     ArrayList<Object>  assmembers = assertions.getMembers();
                     boolean afinalmatch = false;
-                    Decision afinaldecision = new Decision(Decision.CONDITION_NOMATCH);
+                    Decision afinaldecision = new Decision(Decision.RULE_INIT);
                     boolean amatch = false;
-                    Decision adecision = new Decision(Decision.CONDITION_NOMATCH);
+                    Decision adecision = new Decision(Decision.RULE_INIT);
                     for  (Object aobj : assmembers) {
                         Assertion assertion = (Assertion) aobj;
                         Decision da = null;
@@ -166,7 +166,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                         if (aeval != null) {
                             try {
                                 da = aeval.evaluate(assertion, env);
-                                amatch = (da.getType() == Decision.CONDITION_MATCH);
+                                amatch = (da.getType() == Decision.RULE_MATCH);
                                 Debug.message("PolicyEval", "ruleMatches: asserteval: "+rule+ " amatch="+amatch);
                                 // Check combiner rules..
                                 afinalmatch = processDecision( da, amatch, acombiner, afinaldecision, afinalmatch); 
@@ -191,17 +191,23 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
     private boolean processDecision(Decision d, boolean match, int combiner,
                                     Decision finaldecision, boolean finalmatch) 
     {
+        Debug.message("EmbeddedPolicyDecision", "process:START:"+match);
         // Check combiner rules..
         if (combiner == Expression.ALL_OF && match == false)
             finalmatch= false; // We are done here
         if (combiner == Expression.ANY_OF && match == true) {
             finalmatch = true; // We are done here
-            finaldecision.setType(Decision.CONDITION_MATCH);
+            finaldecision.setType(Decision.RULE_MATCH);
             finaldecision.resetAdvices();
+        }
+        if (combiner == Expression.ALL_OF && match == true && 
+            finaldecision.getType() == Decision.RULE_INIT) {
+            finalmatch = true;
+            finaldecision.setType(Decision.RULE_MATCH);
         }
         // aggregate advices and obligations if we are currently heading towards a non-match so far
         if (match == false && finalmatch == false) {
-            finaldecision.setType(Decision.CONDITION_NOMATCH);
+            finaldecision.setType(Decision.RULE_NOMATCH);
             List<Advice> curradvices = d.getAdvices();
             if (curradvices != null){
                 for (Advice cadvice : curradvices) {
@@ -209,6 +215,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                 }
             }
         }
+        Debug.message("EmbeddedPolicyDecision", "process:"+finalmatch);
         return finalmatch;
     }
 
@@ -216,10 +223,12 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
     {
         m_props = props;
         // setup PolicyStore
-        String pcl = props.getProperty(POLICYSTORE_CLASS_PROP);
+        String pcl = m_props.getProperty(POLICYSTORE_CLASS_PROP);
         if (pcl == null)
-            pcl = DEFAULT_POLICYSTORE_CLASS;
+            throw new PolicyException("POLICY_STORE_NOTFOUND",
+                                  "PolicyStore not found");
         m_ps  = (PolicyStore) Class.forName(pcl).newInstance();
+        m_ps.initialize(props);
         // Cache all policies in memory
         s_policyCache = m_ps.getAllPolicies();
     }

@@ -10,7 +10,9 @@
 *******************************************************************************/
 package org.ebayopensource.aegis;
 
+import java.text.MessageFormat;
 import java.util.ResourceBundle;
+
 /**
   * Base Exception class for PEF.
   * Handles i18n messages via PEFMessages.properties resource bundle
@@ -19,17 +21,26 @@ public class PolicyException extends RuntimeException
 {
    
     private String m_errorid = null;
+    private Object[] m_params = null;
     public final String RESOURCE_BUNDLE = "PEFMessages";
-    public PolicyException(String errorid, String message) 
+    
+    public PolicyException(String errorid) 
     {
-        super(errorid+":"+message );
+        super(errorid);
         m_errorid = errorid;
+    }
+    public PolicyException(String errorid,  Object... params) 
+    {
+        super(errorid+":"+params);
+        m_errorid = errorid;
+        m_params = params;
     }
     public String getLocalizedMessage()
     {
         ResourceBundle rb = ResourceBundle.getBundle(RESOURCE_BUNDLE);
-        if (rb != null)
-            return  rb.getString(m_errorid);
+        if (rb != null) {
+            return  MessageFormat.format(rb.getString(m_errorid), m_params);
+        }
         return(m_errorid);
     }
 }

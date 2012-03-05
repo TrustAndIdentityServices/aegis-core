@@ -33,7 +33,7 @@ public class PolicyEvaluationMultiplePoliciesTest
             props.load(url.openStream());
             pdp = PolicyEnforcementPoint.getPDP(props);
         } catch (Exception ex) {
-            fail("Properties File not found");
+            fail("Unable to get PDP:"+ex);
         }
     }
 

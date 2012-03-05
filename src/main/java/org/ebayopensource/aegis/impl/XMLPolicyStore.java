@@ -12,6 +12,7 @@ package org.ebayopensource.aegis.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.ebayopensource.aegis.Effect;
 import org.ebayopensource.aegis.Expression;
@@ -21,6 +22,11 @@ import org.ebayopensource.aegis.Rule;
 import org.ebayopensource.aegis.Target;
 public class XMLPolicyStore implements PolicyStore
 {
+    private Properties m_props = null;
+    public void initialize(Properties props)
+    {
+         m_props = props;
+    }
     public Policy getPolicy(String id) 
     {
         return null;

@@ -12,6 +12,7 @@ package org.ebayopensource.aegis.mock;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.ebayopensource.aegis.Assertion;
 import org.ebayopensource.aegis.Effect;
@@ -37,6 +38,9 @@ import org.ebayopensource.aegis.debug.Debug;
   */
 public class MockOnePolicyDataStore implements PolicyStore
 {
+    public void initialize(Properties props) 
+    {
+    }
     public Policy getPolicy(String id) 
     {
         return null;

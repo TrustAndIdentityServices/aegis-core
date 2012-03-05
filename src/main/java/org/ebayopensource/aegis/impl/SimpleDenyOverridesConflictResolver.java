@@ -25,7 +25,7 @@ public class SimpleDenyOverridesConflictResolver implements ConflictResolver
     public void resolve(Policy currentpolicy, Decision currentdecision, Decision conditiondecision)
     {
         int effect = currentpolicy.getEffect().get();
-        if (conditiondecision.getType() == Decision.CONDITION_MATCH) {
+        if (conditiondecision.getType() == Decision.RULE_MATCH) {
             // We have a concrete decision for this policy here
             switch (currentdecision.getType() ) {
                 case Effect.UNKNOWN :
@@ -47,7 +47,7 @@ public class SimpleDenyOverridesConflictResolver implements ConflictResolver
                     // Already DENIED - ignore this decision
                     break;
             }
-        } else { // CONDITION_NOMATCH
+        } else { // RULE_NOMATCH
             // We have a policy where certain conditions do not match
             switch (currentdecision.getType() ) {
                 case Effect.UNKNOWN :

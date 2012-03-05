@@ -20,6 +20,7 @@ import org.ebayopensource.aegis.Assertion;
 import org.ebayopensource.aegis.Decision;
 import org.ebayopensource.aegis.Environment;
 import org.ebayopensource.aegis.plugin.AssertionEvaluator;
+import org.ebayopensource.aegis.debug.Debug;
 
 /**
   * This class evaluates a Assertion based on the data in the context.
@@ -37,7 +38,7 @@ public class GenericAssertionEvaluator implements AssertionEvaluator
     {
         CExpr expr = assertion.getCExpr();
         CExpr e = expr;
-        Decision d = new Decision(Decision.CONDITION_MATCH);
+        Decision d = new Decision(Decision.RULE_MATCH);
         Advice adv = null;
         Object cval = null;
         for (Environment env : context) {
@@ -46,6 +47,8 @@ public class GenericAssertionEvaluator implements AssertionEvaluator
                 break;
         }
         Object eval = e.val_;
+        Debug.message("GenericAssertionEvaluator", "evaluale:c="+cval+
+                        " op="+ e.op_+ " e="+eval);
         boolean match = false;
         // TODO check for collection - implementing primitive types for now
         if (cval != null) {
@@ -70,11 +73,14 @@ public class GenericAssertionEvaluator implements AssertionEvaluator
                     break;
             }
         }
+        Debug.message("GenericAssertionEvaluator", "evaluate:match="+match);
         // if no match, change decision state and add to Advice, 
-        d.setType(Decision.CONDITION_NOMATCH);
-        if (adv == null)
-            adv = new Advice("x");
-        adv.addExpr(e.id_, e.op_, e.val_);
+        if (match == false) {
+            d.setType(Decision.RULE_NOMATCH);
+            if (adv == null)
+                adv = new Advice("x");
+            adv.addExpr(e.id_, e.op_, e.val_);
+        }
         if (adv != null) {
             d.addAdvice(adv);
         }

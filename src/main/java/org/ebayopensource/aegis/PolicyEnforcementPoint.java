@@ -26,7 +26,7 @@ public class PolicyEnforcementPoint
       */
     public static PolicyDecisionPoint getPDP(Properties props) throws Exception
     {
-        // Instantiate impl (Remove vs Embedded) - TODO onlt embedded for now
+        // Instantiate impl (Remote vs Embedded) - TODO onlt embedded for now
         String implClass = props.getProperty(PDP_CLASS);
         if (implClass == null)
             implClass= DEFAULT_PDP_CLASS;
