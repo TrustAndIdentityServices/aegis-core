@@ -22,6 +22,7 @@ import java.util.ArrayList;
   */
 public class Policy
 {
+    private String           m_id;
     private String           m_name;
     private String           m_description;
     private List<Target>     m_targets;
@@ -38,6 +39,14 @@ public class Policy
         m_rules = rules;
     }
 
+    public String getId()
+    {
+        return m_id;
+    }
+    public void setId(String id)
+    {
+        m_id = id;
+    }
     public String getName()
     {
         return m_name;
@@ -45,6 +54,10 @@ public class Policy
     public String getDescription()
     {
         return m_description;
+    }
+    public void setDescription(String desc)
+    {
+        m_description = desc;
     }
     public List<Target> getTargets()
     {
@@ -64,6 +77,9 @@ public class Policy
     {
         StringBuilder sbld = new StringBuilder();
         sbld.append( "{ \"Policy\" : { ");
+        if (m_id != null) {
+            sbld.append(     "\"id\" : \"").append(m_id).append("\", ");
+        }
         sbld.append(     "\"name\" : \"").append(getName()).append("\"");
         sbld.append(     ", \"description\" : \"").append(getDescription()).append("\"");
         sbld.append(     ", ").append(getEffect());

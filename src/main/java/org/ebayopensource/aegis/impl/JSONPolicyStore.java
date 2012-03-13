@@ -12,7 +12,9 @@ package org.ebayopensource.aegis.impl;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +37,6 @@ import org.json.JSONObject;
   */
 public class JSONPolicyStore implements PolicyStore
 {
-    //private static String DEFAULT_FILE = "samples/policies.json";
     private Properties m_props = null;
 
     public void initialize(Properties props)
@@ -45,50 +46,27 @@ public class JSONPolicyStore implements PolicyStore
 
     public Policy getPolicy(String id) 
     {
-        return null;
-    }
-    private BufferedReader getReader()
-    {
-        String location = m_props.getProperty(PolicyStore.PolicyStoreLocation);
-        BufferedReader rdr = null;
-        try {
-            if (location.startsWith("classpath:")) {
-                String cl = location.substring(10, location.length());
-                Debug.message("JSONPolicyStrore", "getReader: cl="+cl);
-                 
-                Debug.message("JSONPolicyStrore", "getReader: res="+
-                      ClassLoader.getSystemResourceAsStream(cl));
-                rdr = new BufferedReader(
-                      new InputStreamReader(
-                      ClassLoader.getSystemResourceAsStream(cl)));
-            } else {
-                URL url = new URL(location); 
-                rdr = new BufferedReader(
-                      new InputStreamReader(url.openStream()));
+        List<Policy> plist =  getAllPolicies();
+        for (Policy p : plist) {
+            if (p.getId().equals(id)) {
+                return p;
             }
-        
-        } catch(Exception ex) {
-            Debug.error("JSONPolicyStrore", "getReader failed : ex=",ex);
-            PolicyException pe = 
-                   new PolicyException("POLICY_DATASTORE_URLERROR", location);
-            pe.initCause(ex);
-            throw pe;
         }
-        return rdr;
+        return null;
     }
     public List<Policy> getAllPolicies()
     {
-        //String policyfile = DEFAULT_FILE;
         List<Policy> policies = new ArrayList<Policy>();
         BufferedReader rdr = null;
         try {
             rdr = getReader();
             String polstr = null;
             
+            int i = 0;
             while ((polstr = rdr.readLine()) != null) {
             	if (polstr.startsWith("#"))
             		continue;
-                Policy pol1 = parsePolicy(polstr);
+                Policy pol1 = parsePolicy(polstr, i++);
                 policies.add(pol1);
             }
         } catch (PolicyException pe) {
@@ -109,14 +87,42 @@ public class JSONPolicyStore implements PolicyStore
     }
     public void createPolicy(Policy policy)
     {
+        // Add a new GUID
+        policy.setId(java.util.UUID.randomUUID().toString());
+        String jsonStr = policy.toString();
+        String location = m_props.getProperty(PolicyStore.PolicyStoreLocation);
+        // Append the policy
+        PrintStream p = getWriter(true);
+        p.println(policy.toString());
+        p.close();
     }
     public void updatePolicy(Policy policy)
     {
+        List<Policy> plist =  getAllPolicies();
+        PrintStream ps = getWriter(false);
+        for (Policy p : plist) {
+            if (policy.getId().equals(p.getId())) {
+                ps.println(policy.toString());
+            } else {
+                ps.println(p.toString());
+            }
+        }
+        ps.close();
     }
     public void deletePolicy(Policy policy)
     {
+        List<Policy> plist =  getAllPolicies();
+        PrintStream ps = getWriter(false);
+        for (Policy p : plist) {
+            if (policy.getId().equals(p.getId())) {
+                continue;
+            } else {
+                ps.println(p.toString());
+            }
+        }
+        ps.close();
     }
-    private Policy parsePolicy(String pol)
+    private Policy parsePolicy(String pol, int serialno)
     {
         Policy pol1 = null;
         Debug.message("JSONPolicy", "Parsing po="+pol);
@@ -124,6 +130,10 @@ public class JSONPolicyStore implements PolicyStore
             JSONObject ob = new JSONObject(pol);
             JSONObject policy = ob.getJSONObject("Policy");
             Debug.message("JSONPolicyStore", "parsePolicy:policy="+policy); 
+            String uuid = null;
+            try {
+                uuid = policy.getString("id");
+            } catch(Exception ex) {}
             String name = policy.getString("name");
             String desc = policy.getString("description");
             String str = policy.getString("effect");
@@ -176,11 +186,70 @@ public class JSONPolicyStore implements PolicyStore
                 rules.add(rule);
             }
             pol1 = new Policy(name, desc, targets, rules, effect);
+            if (uuid == null) {
+                // Generate one if one does not exist
+                uuid = java.util.UUID.randomUUID().toString();
+            }
+            pol1.setId(uuid);  
 
         } catch (Exception ex) {
             Debug.error("JSONDataStore", "readPolicies: Exception:",ex);
         }
         Debug.message("JSONPolicyStore", "parsePolicy() : "+pol1.toString());
         return pol1;
+    }
+    private BufferedReader getReader()
+    {
+        String location = m_props.getProperty(PolicyStore.PolicyStoreLocation);
+        BufferedReader rdr = null;
+        try {
+            if (location.startsWith("classpath:")) {
+                String cl = location.substring(10, location.length());
+                Debug.message("JSONPolicyStrore", "getReader: cl="+cl);
+                 
+                Debug.message("JSONPolicyStrore", "getReader: res="+
+                      ClassLoader.getSystemResourceAsStream(cl));
+                rdr = new BufferedReader(
+                      new InputStreamReader(
+                      ClassLoader.getSystemResourceAsStream(cl)));
+            } else {
+                URL url = new URL(location); 
+                rdr = new BufferedReader(
+                      new InputStreamReader(url.openStream()));
+            }
+        
+        } catch(Exception ex) {
+            Debug.error("JSONPolicyStrore", "getReader failed : ex=",ex);
+            PolicyException pe = 
+                   new PolicyException("POLICY_DATASTORE_URLERROR", location);
+            pe.initCause(ex);
+            throw pe;
+        }
+        return rdr;
+    }
+    private PrintStream getWriter(boolean append)
+    {
+        String location = m_props.getProperty(PolicyStore.PolicyStoreLocation);
+        PrintStream p = null;
+        try {
+            if (location.startsWith("file://")) {
+                String cl = location.substring(7, location.length());
+                Debug.message("JSONPolicyStrore", "getWriter: cl="+cl);
+                p = new PrintStream(
+                      new PrintStream(new FileOutputStream(cl, append)));
+            } else {
+                PolicyException pe = 
+                   new PolicyException("POLICY_DATASTORE_URLERROR", location);
+                throw pe;
+            } 
+        
+        } catch(Exception ex) {
+            Debug.error("JSONPolicyStrore", "getWriter failed : ex=",ex);
+            PolicyException pe = 
+                   new PolicyException("POLICY_DATASTORE_URLERROR", location);
+            pe.initCause(ex);
+            throw pe;
+        }
+        return p;
     }
 }
