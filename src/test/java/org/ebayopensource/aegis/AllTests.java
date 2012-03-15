@@ -19,7 +19,8 @@ import org.junit.runners.Suite;
 	EffectTest.class,
 	EnvironmentTest.class,
 	ObligationTest.class,
-	PolicyEvaluationTest.class
+	PolicyEvaluationTest.class,
+        JSONDataStoreTest.class
 })
 public class AllTests {
 

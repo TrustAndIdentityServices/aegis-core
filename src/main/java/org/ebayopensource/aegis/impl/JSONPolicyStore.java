@@ -66,7 +66,7 @@ public class JSONPolicyStore implements PolicyStore
             while ((polstr = rdr.readLine()) != null) {
             	if (polstr.startsWith("#"))
             		continue;
-                Policy pol1 = parsePolicy(polstr, i++);
+                Policy pol1 = parsePolicy(polstr);
                 policies.add(pol1);
             }
         } catch (PolicyException pe) {
@@ -122,7 +122,7 @@ public class JSONPolicyStore implements PolicyStore
         }
         ps.close();
     }
-    private Policy parsePolicy(String pol, int serialno)
+    public static Policy parsePolicy(String pol)
     {
         Policy pol1 = null;
         Debug.message("JSONPolicy", "Parsing po="+pol);

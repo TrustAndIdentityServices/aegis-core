@@ -86,18 +86,26 @@ public class Policy
 
         sbld.append(     ", \"target\" : [");
         boolean first = true;
-        for (Target t : getTargets() ) {
-            if (first)
-                first = false;
-            else
-                sbld.append(", ");
-            sbld.append(t.toString());
-        }
+ 
+        List<Target> targetList = getTargets();
+        if (targetList != null) {
+            for (Target t : getTargets() ) {
+                if (first)
+                    first = false;
+                else
+                    sbld.append(", ");
+                sbld.append(t.toString());
+            }
+        } 
         sbld.append(     " ]");
-
         sbld.append(     ", \"rules\" : ");
+        Expression<Rule> rulesExp = getRules();
 
-        sbld.append(getRules().toString(true));
+        if (rulesExp != null) {
+            sbld.append(getRules().toString(true));
+        } else {
+            sbld.append( "[ ]");
+        }
 
         sbld.append(     " } }");
      
