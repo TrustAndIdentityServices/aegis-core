@@ -142,6 +142,60 @@ public class JSONDataStoreTest {
                 policyfile.delete();
         }
     }
+    @Test
+    public void testDeleteException() {
+        File policyfile = null;
+        boolean polnotfoundexception = false;
+        try {
+            policyfile = getTmpFile();
+            PolicyStore pstore = setupPolicyStore(policyfile);
+            List<Policy> policyList = pstore.getAllPolicies();
+            assertEquals(policyList.size(), 0);
+            Policy pol1 = newPolicy("pol1", "desc1");
+            pstore.createPolicy(pol1);
+            policyList = pstore.getAllPolicies();
+            assertEquals(policyList.size(), 1);
+            pol1.setId("XXXXXXXXXX");
+            pstore.deletePolicy(pol1);
+            
+        } catch (PolicyException ex)  {
+            polnotfoundexception = true;
+        } catch (Exception ex)  {
+            ex.printStackTrace();
+            fail("Exception:"+ex);
+        } finally {
+            if (policyfile != null)
+                policyfile.delete();
+        }
+        assertEquals(polnotfoundexception, true);
+    }
+    @Test
+    public void testUpdateException() {
+        File policyfile = null;
+        boolean polnotfoundexception = false;
+        try {
+            policyfile = getTmpFile();
+            PolicyStore pstore = setupPolicyStore(policyfile);
+            List<Policy> policyList = pstore.getAllPolicies();
+            assertEquals(policyList.size(), 0);
+            Policy pol1 = newPolicy("pol1", "desc1");
+            pstore.createPolicy(pol1);
+            policyList = pstore.getAllPolicies();
+            assertEquals(policyList.size(), 1);
+            pol1.setId("XXXXXXXXXX");
+            pstore.updatePolicy(pol1);
+            
+        } catch (PolicyException ex)  {
+            polnotfoundexception = true;
+        } catch (Exception ex)  {
+            ex.printStackTrace();
+            fail("Exception:"+ex);
+        } finally {
+            if (policyfile != null)
+                policyfile.delete();
+        }
+        assertEquals(polnotfoundexception, true);
+    }
     private Policy newPolicy(String nm, String desc)
     {
         Policy pol = new Policy(nm, desc, null,

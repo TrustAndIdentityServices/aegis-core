@@ -100,27 +100,41 @@ public class JSONPolicyStore implements PolicyStore
     {
         List<Policy> plist =  getAllPolicies();
         PrintStream ps = getWriter(false);
+        boolean idfound = false;
         for (Policy p : plist) {
             if (policy.getId().equals(p.getId())) {
                 ps.println(policy.toString());
+                idfound = true;
             } else {
                 ps.println(p.toString());
             }
         }
         ps.close();
+        if (!idfound) {
+            throw(new PolicyException("POLICY_NOT_FOUND_ERROR", policy.getId()));
+        }
     }
     public void deletePolicy(Policy policy)
     {
+        deletePolicyById(policy.getId());
+    }
+    public void deletePolicyById(String id)
+    {
         List<Policy> plist =  getAllPolicies();
         PrintStream ps = getWriter(false);
+        boolean idfound = false;
         for (Policy p : plist) {
-            if (policy.getId().equals(p.getId())) {
+            if (id.equals(p.getId())) {
+                idfound = true;
                 continue;
             } else {
                 ps.println(p.toString());
             }
         }
         ps.close();
+        if (!idfound) {
+            throw(new PolicyException("POLICY_NOT_FOUND_ERROR", id));
+        }
     }
     public static Policy parsePolicy(String pol)
     {

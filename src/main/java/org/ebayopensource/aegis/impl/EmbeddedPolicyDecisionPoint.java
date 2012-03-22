@@ -97,8 +97,9 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
             match =  true; // Empty is same as ANY target
         if (!match) {
             // Get Eval class..
-            TargetEvaluator reval = MetaData.getTargetEvaluator(reqtarget.getType());
+            //TargetEvaluator reval = MetaData.getTargetEvaluator(reqtarget.getType());
             for (Target pres : ptargets) {
+                TargetEvaluator reval = MetaData.getTargetEvaluator(pres.getType());
                 Debug.message("PolicyEval", "targetMatches: pres=: "+pres);
                 try {
                     if (reval.evaluate(reqtarget, pres, env)) {
@@ -222,6 +223,8 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
     public void initialize(Properties props) throws Exception
     {
         m_props = props;
+        // Setup MetaData for this PDP
+        MetaData.loadProperties(props);
         // setup PolicyStore
         String pcl = m_props.getProperty(POLICYSTORE_CLASS_PROP);
         if (pcl == null)

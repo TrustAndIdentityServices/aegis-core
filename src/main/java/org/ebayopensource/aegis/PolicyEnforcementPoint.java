@@ -13,9 +13,11 @@ package org.ebayopensource.aegis;
 import java.util.Properties;
 
 import org.ebayopensource.aegis.debug.Debug;
+import org.ebayopensource.aegis.md.MetaData;
+
 public class PolicyEnforcementPoint
 {
-    public static final String PDP_CLASS = "pdp.class";
+    public static final String PDP_CLASS = "PDP_CLASS";
     public static final String DEFAULT_PDP_CLASS = "org.ebayopensource.aegis.impl.EmbeddedPolicyDecisionPoint";
 
     /**
