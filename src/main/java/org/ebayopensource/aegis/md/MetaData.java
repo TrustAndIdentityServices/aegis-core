@@ -66,7 +66,7 @@ public class MetaData
     public static AssertionEvaluator getAssertionEvaluator(String type)
     {
         try {
-            String cl = getProperty( "attribute."+type+".evalclass");
+            String cl = getProperty( "assertion."+type+".evalclass");
             if (cl == null)
                 cl = DEFAULT_ASSERTION_EVALCLASS;
             Debug.message("MetaData", "getAssertionEvaluator:type="+type+" class="+cl);

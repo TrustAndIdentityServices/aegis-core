@@ -163,7 +163,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                     for  (Object aobj : assmembers) {
                         Assertion assertion = (Assertion) aobj;
                         Decision da = null;
-                        AssertionEvaluator aeval = MetaData.getAssertionEvaluator(assertion.getCategory());
+                        AssertionEvaluator aeval = MetaData.getAssertionEvaluator(assertion.getCExpr().id_);
                         if (aeval != null) {
                             try {
                                 da = aeval.evaluate(assertion, env);
