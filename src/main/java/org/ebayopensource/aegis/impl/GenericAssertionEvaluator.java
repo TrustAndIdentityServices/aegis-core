@@ -32,6 +32,7 @@ import org.ebayopensource.aegis.debug.Debug;
   */
 public class GenericAssertionEvaluator implements AssertionEvaluator
 {
+    final static String WILD_CHAR = "*";
     public void initialize(HashMap props) 
     {
     }
@@ -51,8 +52,14 @@ public class GenericAssertionEvaluator implements AssertionEvaluator
         Debug.message("GenericAssertionEvaluator", "evaluale:c="+cval+
                         " op="+ e.op_+ " e="+eval);
         boolean match = false;
+
+        // WILD_CHAR
+        try {
+            if (eval.equals(WILD_CHAR) && e.op_ == Assertion.OP_EQ) 
+                match = true;
+        } catch (Exception ex) { /* OK to ignore - fallthru to processing below */ }
         // This class implements primitive types only - write a custom plugin for other datatypes & operators
-        if (cval != null) {
+        if (match == false && cval != null) {
             int comp = ((Comparable) cval).compareTo(eval);
             switch (e.op_) {
                 case Assertion.OP_EQ :
