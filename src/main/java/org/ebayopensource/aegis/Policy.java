@@ -28,6 +28,7 @@ public class Policy
     private List<Target>     m_targets;
     private Effect           m_effect;
     private Expression<Rule> m_rules;
+    private boolean          m_silent = false;
 
     public Policy(String name, String desc, List<Target> targets,
                   Expression<Rule> rules, Effect effect)
@@ -59,6 +60,14 @@ public class Policy
     {
         m_description = desc;
     }
+    public boolean isSilent()
+    {
+        return m_silent;
+    }
+    public void setSilent(boolean silent)
+    {
+        m_silent = silent;
+    }
     public List<Target> getTargets()
     {
         return m_targets;
@@ -80,7 +89,8 @@ public class Policy
         if (m_id != null) {
             sbld.append(     "\"id\" : \"").append(m_id).append("\", ");
         }
-        sbld.append(     "\"name\" : \"").append(getName()).append("\"");
+        sbld.append(     "\"silent\" : ").append(isSilent());
+        sbld.append(     ", \"name\" : \"").append(getName()).append("\"");
         sbld.append(     ", \"description\" : \"").append(getDescription()).append("\"");
         sbld.append(     ", ").append(getEffect());
 

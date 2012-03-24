@@ -30,6 +30,7 @@ import org.ebayopensource.aegis.PolicyDecisionPoint;
 import org.ebayopensource.aegis.PolicyStore;
 import org.ebayopensource.aegis.debug.Debug;
 import org.ebayopensource.aegis.plugin.AssertionEvaluator;
+import org.ebayopensource.aegis.plugin.AuditLogger;
 import org.ebayopensource.aegis.plugin.TargetEvaluator;
 import org.ebayopensource.aegis.plugin.RuleEvaluator;
 
@@ -39,11 +40,21 @@ import org.ebayopensource.aegis.plugin.RuleEvaluator;
 public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
 {
     
-    static private volatile List<Policy> s_policyCache = null;
-    //static private volatile MedaData md = null;
+    public static String AUDIT_LOG_CLASS_PARAM          = "AUDIT_LOG_CLASS";
+    public static String DEFAULT_AUDIT_LOG_CLASS        = "org.ebayopensource.aegis.impl.FileAuditLogger";
+    public static String AUDIT_POLICY                   = "POLICYEVAL";
+    public static String AUDIT_POLICY_NOMATCH           = "POLICY_NOMATCH";
+    public static String AUDIT_POLICY_PERMIT            = "POLICY_PERMIT";
+    public static String AUDIT_POLICY_DENY              = "POLICY_DENY";
+    public static String AUDIT_POLICYEVAL_SILENT_PERMIT = "POLICYEVAL_SILENT_PERMIT";
+    public static String AUDIT_FINALDECISION_PERMIT     = "FINALDECISION_PERMIT";
+    public static String AUDIT_FINALDECISION_DENY       = "FINALDECISION_DENY";
+
+    private volatile List<Policy> m_policyCache = null;
     private static final String POLICYSTORE_CLASS_PROP = "PolicyStoreClass";
-    Properties m_props = null;
-    PolicyStore m_ps = null;
+    private Properties m_props = null;
+    private PolicyStore m_ps = null;
+    private AuditLogger m_logger = null;
 
     /**
       * gets a policy <code>Decision</code> for a given input params :
@@ -61,8 +72,9 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
         Debug.message("PolicyEval", "Start getPolicyDecision");
    
         Decision decision = new Decision(Effect.UNKNOWN);
+        boolean sawSilent = false;
         // For each policy, execute the conditions - accumulate results from each.
-        for (Policy policy : s_policyCache) {
+        for (Policy policy : m_policyCache) {
             Debug.message("PolicyEval", "getPolicyDecision:check for policy : "+policy);
             
             try {
@@ -71,6 +83,38 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                 // Check Rules and collect applicable Obligations and Advices
                 int effect = policy.getEffect().get();
                 Decision conditionDecision = ruleMatches(policy.getRules(), env, (effect == Effect.PERMIT));
+                // Initial "silent" processing :
+                // if this policy is in silent mode - "influence" a PERMIT by appropriately tuning the
+                // decision state based on whether the policy is a PERMIT or DENY.
+                // Create a Audit log for the results of this policy
+                String logtype = null;
+                if (conditionDecision.getType() == Decision.RULE_NOMATCH) 
+                    logtype = AUDIT_POLICY_NOMATCH;
+                else if (effect == Effect.PERMIT) 
+                    logtype = AUDIT_POLICY_PERMIT;
+                else
+                    logtype = AUDIT_POLICY_DENY;
+
+                if (policy.isSilent()) {
+                    if (effect == Effect.PERMIT && conditionDecision.getType() == Decision.RULE_NOMATCH) {
+                        logtype = AUDIT_POLICYEVAL_SILENT_PERMIT;
+                        sawSilent = true;
+                    }
+                    if (effect == Effect.DENY && conditionDecision.getType() == Decision.RULE_MATCH) {
+                        logtype = AUDIT_POLICYEVAL_SILENT_PERMIT;
+                        sawSilent = true;
+                    }
+                }
+                m_logger.log(AUDIT_POLICY, logtype, "PolicyName="+policy.getName()+"&PolicyID="
+                             +policy.getId()+"&Decision="+conditionDecision+"&silent="+policy.isSilent()); 
+                if (policy.isSilent()) { 
+                    if (effect == Effect.PERMIT) {
+                        conditionDecision.setType(Decision.RULE_MATCH);
+                    } else {
+                        conditionDecision.setType(Decision.RULE_NOMATCH);
+                    }
+                } else {
+                }
                 
                 // Perform conflict resolution Phase 1
                 MetaData.getConflictResolver().resolve(policy, decision, conditionDecision);
@@ -84,6 +128,9 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
         }
         // Perform conflict 2 resolution here
         MetaData.getConflictResolver().resolveFinal(decision);
+        // Create a Audit log for the final result
+        String finallogtype = (decision.getType() == Decision.EFFECT_DENY) ? AUDIT_FINALDECISION_DENY : AUDIT_FINALDECISION_PERMIT ;
+        m_logger.log(AUDIT_POLICY, finallogtype, "Decision="+decision+"&sawSilent="+sawSilent); 
     
         // Construct final Decision
         return decision;
@@ -223,8 +270,25 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
     public void initialize(Properties props) throws Exception
     {
         m_props = props;
+
+        // Setup Debug  
+        Debug.initialize(props);
+
+        // Setup Audit Logger  
+        try {
+            String cl = m_props.getProperty(AUDIT_LOG_CLASS_PARAM);
+            if (cl == null)
+                cl = DEFAULT_AUDIT_LOG_CLASS;
+            Debug.message("EmbeddedPolicyDecisionPoint", "initialize Logger : class="+cl);
+            m_logger = (AuditLogger) Class.forName(cl).newInstance();
+            m_logger.initialize(m_props);
+        } catch (Exception ex) {
+            Debug.error("EmbeddedPolicyDecisionPoint", "Failed to load AuditLogger :", ex);
+        }
+
         // Setup MetaData for this PDP
         MetaData.loadProperties(props);
+
         // setup PolicyStore
         String pcl = m_props.getProperty(POLICYSTORE_CLASS_PROP);
         if (pcl == null)
@@ -233,6 +297,6 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
         m_ps  = (PolicyStore) Class.forName(pcl).newInstance();
         m_ps.initialize(props);
         // Cache all policies in memory
-        s_policyCache = m_ps.getAllPolicies();
+        m_policyCache = m_ps.getAllPolicies();
     }
 }

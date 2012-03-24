@@ -11,8 +11,10 @@
 package org.ebayopensource.aegis.md;
 
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
+import java.net.URL;
 
 import org.ebayopensource.aegis.debug.Debug;
 //import org.ebayopensource.aegis.impl.SimpleDenyOverridesConflictResolver;
@@ -24,6 +26,7 @@ import org.ebayopensource.aegis.plugin.RuleEvaluator;
 public class MetaData
 {
     public final static String METADATA_CONFIG_FILE_PARAM = "METADATA_CONFIG_FILE";
+    public final static String METADATA_CONFIG_URL_PARAM = "METADATA_CONFIG_URL";
     public final static String DEFAULT_METADATA_PROPERTIES_FILE = "MetaData.properties";
     public final static String FLATFILE_ATTRIBUTE_STORE = "FLATFILE_ATTRIBUTE_STORE";
     public final static String CONFLICTRESOLVER_CLASS_PARAM = "conflictresolver.evalclass";
@@ -95,18 +98,31 @@ public class MetaData
             return s_props.getProperty(id);
         return null;
     }
-    public static void loadProperties(Properties PDPProperties)
+    public static void loadProperties(Properties PDPProperties) throws Exception
     {
-        FileInputStream fin = null;
-        String filename = null;
+        InputStream fin = null;
+        String location = null;
         try {
-            filename = PDPProperties.getProperty(METADATA_CONFIG_FILE_PARAM);
-            Debug.message("MetaData", "loadProperties : file="+filename);
             s_props = new Properties();
-            s_props.load((fin = new FileInputStream(filename)));
-            s_props.setProperty(FLATFILE_ATTRIBUTE_STORE, PDPProperties.getProperty(FLATFILE_ATTRIBUTE_STORE));
+            String ffrepository = PDPProperties.getProperty(FLATFILE_ATTRIBUTE_STORE);
+            if (ffrepository != null)
+                s_props.setProperty(FLATFILE_ATTRIBUTE_STORE, PDPProperties.getProperty(FLATFILE_ATTRIBUTE_STORE));
+            // FILE takes precedence over URL
+            location = PDPProperties.getProperty(METADATA_CONFIG_FILE_PARAM);
+            if (location != null) {
+                Debug.message("MetaData", "loadProperties : file="+location);
+                s_props.load((fin = new FileInputStream(location)));
+            } else {
+                location = PDPProperties.getProperty(METADATA_CONFIG_URL_PARAM);
+                if (location != null) {
+                    Debug.message("MetaData", "loadProperties : url="+location);
+                    URL url = new URL(location); 
+                    s_props.load((fin = url.openStream()));
+                }
+            }
         } catch (Exception ex) {
-            Debug.error("MetaData", "Init:error loading file:"+filename);
+            Debug.error("MetaData", "Init:error loading file:"+location);
+            throw(ex);
         } finally {
             try {
                 if (fin != null)

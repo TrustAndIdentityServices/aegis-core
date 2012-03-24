@@ -31,7 +31,6 @@ public class GenericTargetEvaluator implements TargetEvaluator
     }
     public boolean evaluate(Target reqresource, Target polresource, List<Environment>  context) throws Exception
     {
-        // TODO, check types and  evaluate attributes. For now simply return resource name match
-        return reqresource.getName().equals(polresource.getName());
+        return reqresource.getType().equals(polresource.getType()) && reqresource.getName().equals(polresource.getName());
     }
 }

@@ -11,6 +11,7 @@
 package org.ebayopensource.aegis;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import org.junit.After;
@@ -176,9 +177,11 @@ public class JSONDataStoreTest {
         try {
             policyfile = getTmpFile();
             PolicyStore pstore = setupPolicyStore(policyfile);
+            assertNotNull(pstore);
             List<Policy> policyList = pstore.getAllPolicies();
             assertEquals(policyList.size(), 0);
             Policy pol1 = newPolicy("pol1", "desc1");
+            assertNotNull(pol1);
             pstore.createPolicy(pol1);
             policyList = pstore.getAllPolicies();
             assertEquals(policyList.size(), 1);

@@ -11,11 +11,26 @@
 package org.ebayopensource.aegis.debug;
 
 import java.io.*;
+import java.util.*;
 
 public class Debug
 {
+    public final static String DEBUG_LEVEL_PARAM = "DEBUG_LEVEL";
+    public final static String DEBUG_FILE_PARAM  = "DEBUG_FILE";
+
+    final static String LEVEL_MESSAGE_STR = "message";
+    final static String LEVEL_WARNING_STR = "warning";
+    final static String LEVEL_ERROR_STR   = "error";
+
+    final static int LEVEL_MESSAGE = 3;
+    final static int LEVEL_WARNING = 2;
+    final static int LEVEL_ERROR =   1;
+
     final static String DEFAULT_DEBUG_FILE = "debug.txt";
+
     private static PrintStream ps = null;
+    private static int s_level = LEVEL_MESSAGE;
+    
     static {
         try {
             ps = new PrintStream(new FileOutputStream(DEFAULT_DEBUG_FILE, true));
@@ -23,6 +38,47 @@ public class Debug
             System.out.println("ERROR: could not open debug file : "+DEFAULT_DEBUG_FILE);
         }
     }
+    
+    public static void initialize(Properties props)
+    {
+        setLevel(props.getProperty(DEBUG_LEVEL_PARAM));
+        setFile(props.getProperty(DEBUG_FILE_PARAM));
+    }
+    public static void setFile(String f)
+    {
+        if (f == null) {
+            ps = System.out;
+        } else {
+           try {
+               ps = new PrintStream(new FileOutputStream(f, true));
+           } catch (Exception ex) {
+               System.out.println("ERROR: could not open debug file : "+f);
+           }
+        }
+    }
+    
+    /**
+     * Set Debug level
+     */
+    public static void setLevel(String level)
+    {
+        if (LEVEL_MESSAGE_STR.equals(level))
+            s_level = LEVEL_MESSAGE;
+        else if (LEVEL_WARNING_STR.equals(level))
+            s_level = LEVEL_WARNING;
+        else
+            s_level = LEVEL_ERROR;
+            
+    }
+
+    /**
+     * Get Debug level
+     */
+    public static int getLevel(String level)
+    {
+         return s_level;
+    }
+
     /**
      * Log a Error message
      * @param type
@@ -30,7 +86,8 @@ public class Debug
      */
     public static void error(String type, String msg)
     {
-       ps.println("ERROR:"+type+":"+msg);
+        if (s_level >= LEVEL_ERROR)
+            ps.println("ERROR:"+type+":"+msg);
     }
 
     /**
@@ -41,8 +98,10 @@ public class Debug
      */
     public static void error(String type, String msg, Exception ex)
     {
-       ps.println("ERROR:"+type+":"+msg+ex);
-       ex.printStackTrace(ps);
+        if (s_level >= LEVEL_ERROR) {
+            ps.println("ERROR:"+type+":"+msg+ex);
+            ex.printStackTrace(ps);
+        }
     }
 
     /**
@@ -52,7 +111,9 @@ public class Debug
      */
     public static void warning(String type, String msg)
     {
-       ps.println("WARNING:"+type+":"+msg);
+        if (s_level >= LEVEL_WARNING) {
+           ps.println("WARNING:"+type+":"+msg);
+        }
     }
     /**
      * Log a Info message
@@ -61,7 +122,8 @@ public class Debug
      */
     public static void message(String type, String msg)
     {
-       ps.println("INFO:"+type+":"+msg);
+        if (s_level >= LEVEL_MESSAGE) {
+            ps.println("INFO:"+type+":"+msg);
+        }
     }
-
 }

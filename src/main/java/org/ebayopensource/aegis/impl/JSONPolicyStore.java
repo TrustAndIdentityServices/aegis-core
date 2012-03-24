@@ -148,6 +148,10 @@ public class JSONPolicyStore implements PolicyStore
             try {
                 uuid = policy.getString("id");
             } catch(Exception ex) {}
+            boolean silent = false;
+            try {
+                silent = policy.getBoolean("silent");
+            } catch(Exception ex) {}
             String name = policy.getString("name");
             String desc = policy.getString("description");
             String str = policy.getString("effect");
@@ -191,7 +195,7 @@ public class JSONPolicyStore implements PolicyStore
                     JSONArray j_assertion = arrayob.getJSONArray(j);
                     String id = j_assertion.getString(0);
                     String op = j_assertion.getString(1);
-                    String val = j_assertion.getString(2);
+                    Object val = j_assertion.get(2);
                     Assertion a = new Assertion(category, "");
                     a.setCExpr(id, op,  val);
                     assertions.add(a);
@@ -200,16 +204,17 @@ public class JSONPolicyStore implements PolicyStore
                 rules.add(rule);
             }
             pol1 = new Policy(name, desc, targets, rules, effect);
+            // Set silent mode if present
+            pol1.setSilent(silent);
             if (uuid == null) {
                 // Generate one if one does not exist
                 uuid = java.util.UUID.randomUUID().toString();
             }
             pol1.setId(uuid);  
-
+            Debug.message("JSONPolicyStore", "parsePolicy() : "+pol1.toString());
         } catch (Exception ex) {
             Debug.error("JSONDataStore", "readPolicies: Exception:",ex);
         }
-        Debug.message("JSONPolicyStore", "parsePolicy() : "+pol1.toString());
         return pol1;
     }
     private BufferedReader getReader()
