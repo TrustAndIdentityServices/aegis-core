@@ -19,7 +19,13 @@ public interface PolicyDecisionPoint
       * Returns a Decision
       * @return Decision
       */
-    public Decision getPolicyDecision(Target target, List<Environment> env);
+    public Decision getPolicyDecision(Target target, List<Environment> envlist);
+
+    /**
+      * Returns a Decision
+      * @return Decision
+      */
+    public Decision getPolicyDecision(Target target, Environment env);
 
     /**
       * Initializes the PDP

@@ -26,11 +26,15 @@ import org.ebayopensource.aegis.plugin.TargetEvaluator;
   */
 public class GenericTargetEvaluator implements TargetEvaluator
 {
+    final static String WILD_CHAR = "*";
     public void initialize(HashMap props) 
     {
     }
     public boolean evaluate(Target reqresource, Target polresource, List<Environment>  context) throws Exception
     {
-        return reqresource.getType().equals(polresource.getType()) && reqresource.getName().equals(polresource.getName());
+        if (polresource.getName().equals(WILD_CHAR))
+            return reqresource.getType().equals(polresource.getType());
+        else
+            return reqresource.getType().equals(polresource.getType()) && reqresource.getName().equals(polresource.getName());
     }
 }

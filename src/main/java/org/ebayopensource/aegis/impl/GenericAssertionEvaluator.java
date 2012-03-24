@@ -19,6 +19,7 @@ import org.ebayopensource.aegis.CExpr;
 import org.ebayopensource.aegis.Assertion;
 import org.ebayopensource.aegis.Decision;
 import org.ebayopensource.aegis.Environment;
+import org.ebayopensource.aegis.PolicyException;
 import org.ebayopensource.aegis.plugin.AssertionEvaluator;
 import org.ebayopensource.aegis.debug.Debug;
 
@@ -50,7 +51,7 @@ public class GenericAssertionEvaluator implements AssertionEvaluator
         Debug.message("GenericAssertionEvaluator", "evaluale:c="+cval+
                         " op="+ e.op_+ " e="+eval);
         boolean match = false;
-        // TODO check for collection - implementing primitive types for now
+        // This class implements primitive types only - write a custom plugin for other datatypes & operators
         if (cval != null) {
             int comp = ((Comparable) cval).compareTo(eval);
             switch (e.op_) {
@@ -71,6 +72,8 @@ public class GenericAssertionEvaluator implements AssertionEvaluator
                     if (comp > 0)
                         match = true;
                     break;
+                default :
+                    throw new PolicyException("INVALID_OPERATOR", e.op_);
             }
         }
         Debug.message("GenericAssertionEvaluator", "evaluate:match="+match);

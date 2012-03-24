@@ -18,10 +18,12 @@ public class Assertion
     static final public int OP_NE = 1;
     static final public int OP_LT = 2;
     static final public int OP_GT = 3;
-    static final public int OP_MAX = 3;
+    static final public int OP_IN = 4;
+    static final public int OP_NOTIN = 5;
+    static final public int OP_MAX = 5;
    
 
-    static private String[] s_strs = { "=", "!=", "<", ">" };
+    static private String[] s_strs = { "=", "!=", "<", ">", "in", "notin"};
 
     private String m_category = null;
     private String m_name = null;

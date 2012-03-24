@@ -28,7 +28,7 @@ public class AssertionTest {
     static private String val1 = "val1";
     static private String attr2 = "attr2";
     static private String val2 = "val2";
-    static private int INVALID_OP = 4;
+    static private int INVALID_OP = Assertion.OP_MAX +1;
 
     @BeforeClass
     public static void oneTimeSetUp() {

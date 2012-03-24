@@ -55,13 +55,27 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
     private Properties m_props = null;
     private PolicyStore m_ps = null;
     private AuditLogger m_logger = null;
-
     /**
       * gets a policy <code>Decision</code> for a given input params :
       *  @param subjects <code>List</code> of identities attempting acccess
       *  @param resource being accessed
       *  @param action being performed
       *  @param env context of the request
+      *  @return Decision
+      */
+    public Decision getPolicyDecision(Target target, Environment env) 
+    {
+        ArrayList<Environment> envlist = new ArrayList<Environment>();
+        envlist.add(env);
+        return getPolicyDecision(target, envlist);
+    }
+
+    /**
+      * gets a policy <code>Decision</code> for a given input params :
+      *  @param subjects <code>List</code> of identities attempting acccess
+      *  @param resource being accessed
+      *  @param action being performed
+      *  @param env list of contexts of the request
       *  @return Decision
       */
     public Decision getPolicyDecision(Target target, List<Environment> env) 

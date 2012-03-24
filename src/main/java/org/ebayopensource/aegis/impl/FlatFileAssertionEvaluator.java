@@ -31,6 +31,8 @@ import org.ebayopensource.aegis.md.MetaData;
   */
 public class FlatFileAssertionEvaluator extends GenericAssertionEvaluator
 {
+    final static String WILD_CHAR = "*";
+
     public void initialize(HashMap props) 
     {
         super.initialize(props);
@@ -56,8 +58,11 @@ public class FlatFileAssertionEvaluator extends GenericAssertionEvaluator
         }
 
         // Check membership - is membershipAttr value a member of assertion name
-        boolean match = checkMembership(e.id_, e.val_, cval);
+        boolean match = checkMembership(e.id_, e.op_, e.val_, cval);
         Debug.message("FlatFileAssertionEvaluator", "evaluate:match="+match);
+        // Reverse match if operation is "notin or !=
+        if (e.op_ == Assertion.OP_NE || e.op_ == Assertion.OP_NOTIN)
+            match = !match;
         // if no match, change decision state and add to Advice, 
         if (match == false) {
             d.setType(Decision.RULE_NOMATCH);
@@ -70,8 +75,15 @@ public class FlatFileAssertionEvaluator extends GenericAssertionEvaluator
         }
         return d;
     }
-    private boolean checkMembership(String parentcategory, Object parentname, Object member)
+    private boolean checkMembership(String parentcategory, int parentop, Object parentname, Object member)
     {
+        // Check WILD_CHAR
+        try {
+            if (parentname.equals(WILD_CHAR))
+                return true;
+        } catch (Exception ex) {
+            // Its okay to ignore this error - fall back is exhaustive search below
+        }
         // Get Attribute store directory - 
         String ffdirname = MetaData.getProperty(MetaData.FLATFILE_ATTRIBUTE_STORE);
         String ffgroupfilename = ffdirname+"/attrgroups.txt";
