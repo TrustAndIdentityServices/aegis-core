@@ -28,16 +28,9 @@ public class Debug
 
     final static String DEFAULT_DEBUG_FILE = "debug.txt";
 
-    private static PrintStream ps = null;
+    private static PrintStream ps = System.out;
+    private static boolean s_psIsSystem = true;
     private static int s_level = LEVEL_MESSAGE;
-    
-    static {
-        try {
-            ps = new PrintStream(new FileOutputStream(DEFAULT_DEBUG_FILE, true));
-        } catch (Exception ex) {
-            System.out.println("ERROR: could not open debug file : "+DEFAULT_DEBUG_FILE);
-        }
-    }
     
     public static void initialize(Properties props)
     {
@@ -46,11 +39,19 @@ public class Debug
     }
     public static void setFile(String f)
     {
-        if (f == null) {
+        // Close previous file if present
+        if (!s_psIsSystem && ps != null) {
+           try {
+               ps.close();
+           } catch (Exception ex) {}
+        }
+        if (f == null || f.length() == 0) {
             ps = System.out;
+            s_psIsSystem = true;
         } else {
            try {
                ps = new PrintStream(new FileOutputStream(f, true));
+               s_psIsSystem = false;
            } catch (Exception ex) {
                System.out.println("ERROR: could not open debug file : "+f);
            }

@@ -22,6 +22,7 @@ public class FileAuditLogger implements AuditLogger
 {
     private String      m_filename = null;
     private PrintStream m_ps = System.out;
+    private boolean     m_psIsSystem = true;
     
     public void initialize(Properties props)
     {
@@ -30,13 +31,20 @@ public class FileAuditLogger implements AuditLogger
     }
     public void setFile(String f)
     {
+        if (!m_psIsSystem && m_ps != null) {
+            try {
+                m_ps.close();
+           } catch (Exception ex) {}
+        }
         if (f == null) {
             Debug.message("FlatAuditLogger", "Default File Audit to System.out");
             m_ps = System.out;
+            m_psIsSystem = true;
         } else {
            try {
                Debug.message("FlatAuditLogger", "Opening configured Audit file : "+f);
                m_ps = new PrintStream(new FileOutputStream(f, true));
+               m_psIsSystem = false;
            } catch (Exception ex) {
                Debug.error("FlatAuditLogger", "ERROR: could not open Audit file : "+f);
            }

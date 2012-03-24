@@ -109,7 +109,11 @@ public class Assertion
         sb.append(" [ ");
         sb.append("\"").append(cexpr.id_).append("\"");
         sb.append(", \"").append(s_strs[cexpr.op_]).append("\"");
-        sb.append(", \"").append(cexpr.val_).append("\"");
+        // Check type before quiting
+        if (cexpr.val_ instanceof java.lang.Integer || cexpr.val_ instanceof java.lang.Boolean)
+            sb.append(", ").append(cexpr.val_);
+        else
+            sb.append(", \"").append(cexpr.val_).append("\"");
         sb.append(" ]");
         return sb.toString();
     }

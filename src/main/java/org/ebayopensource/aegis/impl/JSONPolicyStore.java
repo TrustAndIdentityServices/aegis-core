@@ -139,11 +139,11 @@ public class JSONPolicyStore implements PolicyStore
     public static Policy parsePolicy(String pol)
     {
         Policy pol1 = null;
-        Debug.message("JSONPolicy", "Parsing po="+pol);
+        Debug.message("JSONPolicy", "parsePolicy:Start Parsing po="+pol);
         try {
             JSONObject ob = new JSONObject(pol);
             JSONObject policy = ob.getJSONObject("Policy");
-            Debug.message("JSONPolicyStore", "parsePolicy:policy="+policy); 
+            Debug.message("JSONPolicyStore", "parsePolicy: initial policy jsonobject="+policy); 
             String uuid = null;
             try {
                 uuid = policy.getString("id");
@@ -196,6 +196,7 @@ public class JSONPolicyStore implements PolicyStore
                     String id = j_assertion.getString(0);
                     String op = j_assertion.getString(1);
                     Object val = j_assertion.get(2);
+                    Debug.message("JSONPolicyStore", "parsePolicy:found valtype="+val.getClass());
                     Assertion a = new Assertion(category, "");
                     a.setCExpr(id, op,  val);
                     assertions.add(a);
@@ -211,9 +212,9 @@ public class JSONPolicyStore implements PolicyStore
                 uuid = java.util.UUID.randomUUID().toString();
             }
             pol1.setId(uuid);  
-            Debug.message("JSONPolicyStore", "parsePolicy() : "+pol1.toString());
+            Debug.message("JSONPolicyStore", "parsePolicy:final result : "+pol1.toString());
         } catch (Exception ex) {
-            Debug.error("JSONDataStore", "readPolicies: Exception:",ex);
+            Debug.error("JSONDataStore", "parsePolicy: Exception:",ex);
         }
         return pol1;
     }
