@@ -119,8 +119,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                         sawSilent = true;
                     }
                 }
-                m_logger.log(AUDIT_POLICY, logtype, "PolicyName="+policy.getName()+"&PolicyID="
-                             +policy.getId()+"&Decision="+conditionDecision+"&silent="+policy.isSilent()); 
+                logPolicyEval(logtype, target, policy, conditionDecision, null);
                 if (policy.isSilent()) { 
                     if (effect == Effect.PERMIT) {
                         conditionDecision.setType(Decision.RULE_MATCH);
@@ -144,7 +143,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
         MetaData.getConflictResolver().resolveFinal(decision);
         // Create a Audit log for the final result
         String finallogtype = (decision.getType() == Decision.EFFECT_DENY) ? AUDIT_FINALDECISION_DENY : AUDIT_FINALDECISION_PERMIT ;
-        m_logger.log(AUDIT_POLICY, finallogtype, "Decision="+decision+"&sawSilent="+sawSilent); 
+        logPolicyEval(finallogtype, target, null, decision, "sawSilent="+sawSilent);
     
         // Construct final Decision
         return decision;
@@ -312,5 +311,16 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
         m_ps.initialize(props);
         // Cache all policies in memory
         m_policyCache = m_ps.getAllPolicies();
+    }
+    private void logPolicyEval(String logtype, Target target, Policy policy, Decision decision, String extra)
+    {
+        String policystr = (policy == null) ? "" : "PolicyName="+policy.getName()+"&PolicyID="+policy.getId()+"&silent="+policy.isSilent();
+        String decisionstr = "&Decision="+decision;
+        String extraStr = (extra == null) ? "" : extra;
+        m_logger.log(AUDIT_POLICY,
+                     logtype,
+                     target.getType()+":"+target.getName(),
+                     policystr+
+                     decisionstr+extraStr);
     }
 }
