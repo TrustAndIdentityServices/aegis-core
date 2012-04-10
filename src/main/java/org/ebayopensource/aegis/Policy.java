@@ -29,6 +29,7 @@ public class Policy
     private Effect           m_effect;
     private Expression<Rule> m_rules;
     private boolean          m_silent = false;
+    private boolean          m_active = true;
 
     public Policy(String name, String desc, List<Target> targets,
                   Expression<Rule> rules, Effect effect)
@@ -82,6 +83,16 @@ public class Policy
         return m_rules;
     }
 
+    public boolean isActive()
+    {
+        return m_active;
+    }
+
+    public void setActive(boolean state)
+    {
+        m_active = state;
+    }
+
     public String toString()
     {
         StringBuilder sbld = new StringBuilder();
@@ -89,7 +100,8 @@ public class Policy
         if (m_id != null) {
             sbld.append(     "\"id\" : \"").append(m_id).append("\", ");
         }
-        sbld.append(     "\"silent\" : ").append(isSilent());
+        sbld.append(     "\"active\" : ").append(isActive());
+        sbld.append(     ", \"silent\" : ").append(isSilent());
         sbld.append(     ", \"name\" : \"").append(getName()).append("\"");
         sbld.append(     ", \"description\" : \"").append(getDescription()).append("\"");
         sbld.append(     ", ").append(getEffect());
@@ -121,37 +133,4 @@ public class Policy
      
         return sbld.toString();
     }
-    public static void  main(String[] args) 
-    {
-         
-         ArrayList<Target> targets = new ArrayList<Target>();
-         Target target1 = new Target("web", "http://www.ebay.com/xxxx");
-         Target target2 = new Target("cmd", "CMD:addItem");
-         targets.add(target1);
-         targets.add(target2);
-         Expression<Rule> rules = new Expression<Rule>();
-         rules.setType(Expression.ALL_OF);
-         
-
-         Expression<Assertion> exp1 = new Expression<Assertion>();
-         Assertion a1 = new Assertion("cat1", "assertion1");
-         a1.setCExpr( "id1", 0, "val1");
-
-         Assertion a2 = new Assertion("cat1", "assertion2");
-         a2.setCExpr("id2", 0, "val2");
-
-         exp1.add(a1);
-         exp1.add(a2);
-  
-
-         Rule rule1 = new Rule("category1", "rule1", exp1);
-         rules.add(rule1);
-       
-         rules.add(rule1);
-       
-         Effect effect = new Effect(Effect.PERMIT);
-         Policy pol = new Policy("testPolicy", "TEST Policy", targets, rules, effect);
-         System.out.println("Policy = "+pol);
-    }
-
 }

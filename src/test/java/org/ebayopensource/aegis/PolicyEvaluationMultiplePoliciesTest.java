@@ -31,6 +31,7 @@ public class PolicyEvaluationMultiplePoliciesTest
             Properties props = new Properties();
             URL url = ClassLoader.getSystemResource("PDP.properties");
             props.load(url.openStream());
+System.out.println("PROPS =========="+props);
             pdp = PolicyEnforcementPoint.getPDP(props);
         } catch (Exception ex) {
             fail("Unable to get PDP:"+ex);

@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import org.ebayopensource.aegis.Advice;
-import org.ebayopensource.aegis.CExpr;
 import org.ebayopensource.aegis.Assertion;
+import org.ebayopensource.aegis.CExpr;
+import org.ebayopensource.aegis.Context;
 import org.ebayopensource.aegis.Decision;
-import org.ebayopensource.aegis.Environment;
 import org.ebayopensource.aegis.plugin.AssertionEvaluator;
 import org.ebayopensource.aegis.debug.Debug;
 import org.ebayopensource.aegis.md.MetaData;
@@ -33,11 +33,11 @@ public class FlatFileAssertionEvaluator extends GenericAssertionEvaluator
 {
     final static String WILD_CHAR = "*";
 
-    public void initialize(HashMap props) 
+    public void initialize(Context ctx) 
     {
-        super.initialize(props);
+        super.initialize(ctx);
     }
-    public Decision evaluate(Assertion assertion, List<Environment> context) throws Exception
+    public Decision evaluate(Assertion assertion, Context ctx) throws Exception
     {
         CExpr expr = assertion.getCExpr();
         CExpr e = expr;
@@ -46,19 +46,15 @@ public class FlatFileAssertionEvaluator extends GenericAssertionEvaluator
         Object cval = null;
 
         // Get membership attribute
-        String membershipAttr = MetaData.getMembershipAttribute(e.id_);
+        String membershipAttr = ctx.getMetaData().getMembershipAttribute(e.id_);
 
         // TODO : make sure e.op_ is one of the supported operations : currently "=" or "in" only.
 
         // Retrieve membership attr value from the environment
-        for (Environment env : context) {
-            cval = env.getAttribute(membershipAttr);
-            if (cval != null)
-                break;
-        }
+        cval = ctx.getEnvValue(membershipAttr);
 
         // Check membership - is membershipAttr value a member of assertion name
-        boolean match = checkMembership(e.id_, e.op_, e.val_, cval);
+        boolean match = isMember(e.id_, e.val_, cval, ctx);
         Debug.message("FlatFileAssertionEvaluator", "evaluate:match="+match);
         // Reverse match if operation is "notin or !=
         if (e.op_ == Assertion.OP_NE || e.op_ == Assertion.OP_NOTIN)
@@ -75,7 +71,7 @@ public class FlatFileAssertionEvaluator extends GenericAssertionEvaluator
         }
         return d;
     }
-    private boolean checkMembership(String parentcategory, int parentop, Object parentname, Object member)
+    public boolean isMember(String parentcategory, Object parentname, Object member, Context ctx)
     {
         // Check WILD_CHAR
         try {
@@ -85,7 +81,7 @@ public class FlatFileAssertionEvaluator extends GenericAssertionEvaluator
             // Its okay to ignore this error - fall back is exhaustive search below
         }
         // Get Attribute store directory - 
-        String ffdirname = MetaData.getProperty(MetaData.FLATFILE_ATTRIBUTE_STORE);
+        String ffdirname = ctx.getMetaData().getProperty(MetaData.FLATFILE_ATTRIBUTE_STORE);
         String ffgroupfilename = ffdirname+"/attrgroups.txt";
         String ffmembersdir = ffdirname+"/groupmembers/";
 
@@ -114,7 +110,7 @@ public class FlatFileAssertionEvaluator extends GenericAssertionEvaluator
                 }
             }
         } catch (Exception ex) {
-            Debug.error("FlatFileAssertionEvaluator", "checkMembership failed to read groups file.", ex);
+            Debug.error("FlatFileAssertionEvaluator", "isMember failed to read groups file.", ex);
             return false;
         } finally {
             if (rdr != null) 
@@ -125,7 +121,7 @@ public class FlatFileAssertionEvaluator extends GenericAssertionEvaluator
 
         if (ids == null) {
             // Not found! - assertion uses non-existant group. TODO : implement bad policy support.
-            Debug.error("FlatFileAssertionEvaluator", "checkMembership:Group not found."+parentcategory+":"+parentname);
+            Debug.error("FlatFileAssertionEvaluator", "isMember:Group not found."+parentcategory+":"+parentname);
             return false;
         }
         // Iterate group members and see if contain  member
@@ -146,7 +142,7 @@ public class FlatFileAssertionEvaluator extends GenericAssertionEvaluator
                 }
             }
         } catch (Exception ex) {
-            Debug.error("FlatFileAssertionEvaluator", "checkMembership failed to read members file.", ex);
+            Debug.error("FlatFileAssertionEvaluator", "isMember failed to read members file.", ex);
             return false;
         } finally {
             if (rdr != null) 

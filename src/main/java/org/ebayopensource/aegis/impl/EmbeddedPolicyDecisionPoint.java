@@ -17,6 +17,7 @@ import java.util.Properties;
 
 import org.ebayopensource.aegis.Advice;
 import org.ebayopensource.aegis.Assertion;
+import org.ebayopensource.aegis.Context;
 import org.ebayopensource.aegis.Decision;
 import org.ebayopensource.aegis.Effect;
 import org.ebayopensource.aegis.Environment;
@@ -80,6 +81,15 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
       */
     public Decision getPolicyDecision(Target target, List<Environment> env) 
     {
+        Context context = null;
+        try {
+            // Construct the Context object
+            context = new Context(m_props, env);
+        } catch (Exception ex) {
+            Debug.error("PolicyEval", "Context init error:",ex);
+            throw new PolicyException("POLICY_CONTEXT_ERROR",
+                                  "Context could not be established");
+        }
         // Get relevant policies
         // TODO :m_ps query policies...
         // For now use in memory cache 
@@ -91,12 +101,14 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
         for (Policy policy : m_policyCache) {
             Debug.message("PolicyEval", "getPolicyDecision:check for policy : "+policy);
             
+            if (!policy.isActive())
+                continue;
             try {
-                if (!targetMatches(target, policy.getTargets(), env))
+                if (!targetMatches(target, policy.getTargets(), context))
                     continue;
                 // Check Rules and collect applicable Obligations and Advices
                 int effect = policy.getEffect().get();
-                Decision conditionDecision = ruleMatches(policy.getRules(), env, (effect == Effect.PERMIT));
+                Decision conditionDecision = ruleMatches(policy.getRules(), context, (effect == Effect.PERMIT));
                 // Initial "silent" processing :
                 // if this policy is in silent mode - "influence" a PERMIT by appropriately tuning the
                 // decision state based on whether the policy is a PERMIT or DENY.
@@ -119,7 +131,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                         sawSilent = true;
                     }
                 }
-                logPolicyEval(logtype, target, policy, conditionDecision, null);
+                context.logPolicyEval(AUDIT_POLICY, logtype, target, policy, conditionDecision, null);
                 if (policy.isSilent()) { 
                     if (effect == Effect.PERMIT) {
                         conditionDecision.setType(Decision.RULE_MATCH);
@@ -130,7 +142,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                 }
                 
                 // Perform conflict resolution Phase 1
-                MetaData.getConflictResolver().resolve(policy, decision, conditionDecision);
+                context.getMetaData().getConflictResolver().resolve(policy, decision, conditionDecision);
                 
                 Debug.message("PolicyEval", "Found matching policy:"+policy+" effect="+effect);
             } catch(Exception ex) {
@@ -140,16 +152,16 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
             }
         }
         // Perform conflict 2 resolution here
-        MetaData.getConflictResolver().resolveFinal(decision);
+        context.getMetaData().getConflictResolver().resolveFinal(decision);
         // Create a Audit log for the final result
         String finallogtype = (decision.getType() == Decision.EFFECT_DENY) ? AUDIT_FINALDECISION_DENY : AUDIT_FINALDECISION_PERMIT ;
-        logPolicyEval(finallogtype, target, null, decision, "sawSilent="+sawSilent);
+        context.logPolicyEval(AUDIT_POLICY, finallogtype, target, null, decision, "sawSilent="+sawSilent);
     
         // Construct final Decision
         return decision;
     }
 
-    private boolean targetMatches(Target reqtarget, List<Target> ptargets, List<Environment> env)
+    private boolean targetMatches(Target reqtarget, List<Target> ptargets, Context context)
     {
         boolean match = false;
         Debug.message("PolicyEval", "targetMatches: start: "+reqtarget);
@@ -157,12 +169,13 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
             match =  true; // Empty is same as ANY target
         if (!match) {
             // Get Eval class..
-            //TargetEvaluator reval = MetaData.getTargetEvaluator(reqtarget.getType());
+            //TargetEvaluator reval = context.getMetaData().getTargetEvaluator(reqtarget.getType());
             for (Target pres : ptargets) {
-                TargetEvaluator reval = MetaData.getTargetEvaluator(pres.getType());
+                TargetEvaluator reval = context.getMetaData().getTargetEvaluator(pres.getType());
+                reval.initialize(context);
                 Debug.message("PolicyEval", "targetMatches: pres=: "+pres);
                 try {
-                    if (reval.evaluate(reqtarget, pres, env)) {
+                    if (reval.evaluate(reqtarget, pres, context)) {
                        match = true;
                        break;
                     }
@@ -177,7 +190,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
         return match;
     }
     // TODO : process collect advices - advice collection for PERMIT policies only
-    private Decision ruleMatches(Expression<Rule> prules, List<Environment> env, boolean collectadvices)
+    private Decision ruleMatches(Expression<Rule> prules, Context context, boolean collectadvices)
     {
      
         Debug.message("PolicyEval", "ruleMatches: start: "+prules);
@@ -200,10 +213,10 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                 Debug.message("PolicyEval", "ruleMatches: pol member: "+rule);
                 Decision d = null;
                 // Get Eval class..
-                RuleEvaluator seval = MetaData.getRuleEvaluator(rule.getCategory());
+                RuleEvaluator seval = context.getMetaData().getRuleEvaluator(rule.getCategory());
                 if (seval != null) {
                     try {
-                        d = seval.evaluate(rule, env);
+                        d = seval.evaluate(rule, context);
                         match = (d.getType() == Decision.RULE_MATCH);
                             Debug.message("PolicyEval", "ruleMatches: ruleeval: "+rule+ " match="+match);
                     } catch(Exception ex) {
@@ -223,10 +236,11 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                     for  (Object aobj : assmembers) {
                         Assertion assertion = (Assertion) aobj;
                         Decision da = null;
-                        AssertionEvaluator aeval = MetaData.getAssertionEvaluator(assertion.getCExpr().id_);
+                        AssertionEvaluator aeval = context.getMetaData().getAssertionEvaluator(assertion.getCExpr().id_);
+                        aeval.initialize(context);
                         if (aeval != null) {
                             try {
-                                da = aeval.evaluate(assertion, env);
+                                da = aeval.evaluate(assertion, context);
                                 amatch = (da.getType() == Decision.RULE_MATCH);
                                 Debug.message("PolicyEval", "ruleMatches: asserteval: "+rule+ " amatch="+amatch);
                                 // Check combiner rules..
@@ -286,22 +300,8 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
 
         // Setup Debug  
         Debug.initialize(props);
-
-        // Setup Audit Logger  
-        try {
-            String cl = m_props.getProperty(AUDIT_LOG_CLASS_PARAM);
-            if (cl == null)
-                cl = DEFAULT_AUDIT_LOG_CLASS;
-            Debug.message("EmbeddedPolicyDecisionPoint", "initialize Logger : class="+cl);
-            m_logger = (AuditLogger) Class.forName(cl).newInstance();
-            m_logger.initialize(m_props);
-        } catch (Exception ex) {
-            Debug.error("EmbeddedPolicyDecisionPoint", "Failed to load AuditLogger :", ex);
-        }
-
-        // Setup MetaData for this PDP
-        MetaData.loadProperties(props);
-
+        // Create initial context - to initialize MetaData, Logging
+        Context ctx = new Context(props, null);
         // setup PolicyStore
         String pcl = m_props.getProperty(POLICYSTORE_CLASS_PROP);
         if (pcl == null)
@@ -311,16 +311,5 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
         m_ps.initialize(props);
         // Cache all policies in memory
         m_policyCache = m_ps.getAllPolicies();
-    }
-    private void logPolicyEval(String logtype, Target target, Policy policy, Decision decision, String extra)
-    {
-        String policystr = (policy == null) ? "" : "PolicyName="+policy.getName()+"&PolicyID="+policy.getId()+"&silent="+policy.isSilent();
-        String decisionstr = "&Decision="+decision;
-        String extraStr = (extra == null) ? "" : extra;
-        m_logger.log(AUDIT_POLICY,
-                     logtype,
-                     target.getType()+":"+target.getName(),
-                     policystr+
-                     decisionstr+extraStr);
     }
 }

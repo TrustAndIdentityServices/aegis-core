@@ -13,7 +13,6 @@ package org.ebayopensource.aegis;
 import java.util.Properties;
 
 import org.ebayopensource.aegis.debug.Debug;
-import org.ebayopensource.aegis.md.MetaData;
 
 public class PolicyEnforcementPoint
 {

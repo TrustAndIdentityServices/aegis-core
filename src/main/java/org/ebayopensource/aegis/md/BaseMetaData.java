@@ -24,7 +24,7 @@ import org.ebayopensource.aegis.plugin.AssertionEvaluator;
 import org.ebayopensource.aegis.plugin.RuleEvaluator;
 import org.ebayopensource.aegis.plugin.MetaDataRepository;
 
-public class MetaData
+public class BaseMetaData
 {
     public static final String METADATA_REPOSITORY_CLASS_PARAM =
                                "METADATA_REPOSITORY_CLASS";
@@ -108,12 +108,12 @@ public class MetaData
     public void loadProperties(Properties PDPProperties) throws Exception
     {
         try {
-            // Retrive Repository class
+            // Retrieve Repository class
             String cl =PDPProperties.getProperty(
                            METADATA_REPOSITORY_CLASS_PARAM);
             Debug.message("MetaData", "MetaDataRepository:class="+cl);
             metadataRepository = (MetaDataRepository) Class.forName(cl).newInstance();
-            metadataRepository .initialize(PDPProperties);
+            metadataRepository.initialize(PDPProperties);
             m_props = new Properties();
             String ffrepository = PDPProperties.getProperty(FLATFILE_ATTRIBUTE_STORE);
             if (ffrepository != null)

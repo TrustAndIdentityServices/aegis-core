@@ -149,8 +149,12 @@ public class JSONPolicyStore implements PolicyStore
                 uuid = policy.getString("id");
             } catch(Exception ex) {}
             boolean silent = false;
+            boolean active = true;
             try {
                 silent = policy.getBoolean("silent");
+            } catch(Exception ex) {}
+            try {
+                active = policy.getBoolean("active");
             } catch(Exception ex) {}
             String name = policy.getString("name");
             String desc = policy.getString("description");
@@ -205,6 +209,8 @@ public class JSONPolicyStore implements PolicyStore
                 rules.add(rule);
             }
             pol1 = new Policy(name, desc, targets, rules, effect);
+            // Set state 
+            pol1.setActive(active);
             // Set silent mode if present
             pol1.setSilent(silent);
             if (uuid == null) {

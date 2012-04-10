@@ -13,7 +13,7 @@ package org.ebayopensource.aegis.impl;
 import java.util.HashMap;
 import java.util.List;
 
-import org.ebayopensource.aegis.Environment;
+import org.ebayopensource.aegis.Context;
 import org.ebayopensource.aegis.Target;
 import org.ebayopensource.aegis.plugin.TargetEvaluator;
 
@@ -27,14 +27,15 @@ import org.ebayopensource.aegis.plugin.TargetEvaluator;
 public class GenericTargetEvaluator implements TargetEvaluator
 {
     final static String WILD_CHAR = "*";
-    public void initialize(HashMap props) 
+    public void initialize(Context ctx) 
     {
     }
-    public boolean evaluate(Target reqresource, Target polresource, List<Environment>  context) throws Exception
+    public boolean evaluate(Target reqresource, Target polresource, Context context) throws Exception
     {
         if (polresource.getName().equals(WILD_CHAR))
             return reqresource.getType().equals(polresource.getType());
         else
-            return reqresource.getType().equals(polresource.getType()) && reqresource.getName().equals(polresource.getName());
+            return reqresource.getType().equals( polresource.getType()) &&
+                        reqresource.getName().equals(polresource.getName());
     }
 }

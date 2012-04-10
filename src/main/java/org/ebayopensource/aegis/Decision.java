@@ -22,7 +22,7 @@ public class Decision
     static public final int RULE_MATCH = 4;
     static public final int RULE_NOMATCH = 5;
     static String[] s_strs = 
-              { "DENY", "PERMIT", "UNKNOWN", "RULE_MATCH", "RULE_NOMATCH"};
+              { "DENY", "PERMIT", "UNKNOWN","RULE_INIT", "RULE_MATCH", "RULE_NOMATCH"};
     private int m_type = 0;
     private ArrayList<Obligation> m_obligations = null;
     private ArrayList<Advice> m_advices = null;
@@ -121,7 +121,7 @@ public class Decision
     public String toString()
     {
         StringBuilder sbld = new StringBuilder();
-        sbld.append("Decision : { effect : \"").append(getType()).append("\", ") ;
+        sbld.append("Decision : { effect : \"").append(getTypeStr()).append("\", ") ;
         sbld.append("Obligations: ").append(getObligations()).append(", ");
         sbld.append("Advices: ");
            if (m_advices != null) {

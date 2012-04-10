@@ -69,7 +69,9 @@ public class Rule
         StringBuilder sb = new StringBuilder();
         sb.append("{ ");
         sb.append(" \"category\" : \"").append(getCategory()).append("\" , ");
-        sb.append(getExpression().toString());
+        Expression<Assertion> exp = getExpression();
+        if (exp != null)
+            sb.append(exp.toString());
         sb.append("}");
         return sb.toString();
     }

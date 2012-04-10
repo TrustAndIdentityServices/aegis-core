@@ -28,5 +28,5 @@ public interface AuditLogger
      * @param msgid
      * @param message
      */
-    public void log(String type, String msgid, String target, String message);
+    public void log(int ctxid, String type, String msgid, String target, String message);
 }

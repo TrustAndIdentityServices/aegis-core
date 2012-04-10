@@ -16,9 +16,9 @@ import java.util.List;
 
 import org.ebayopensource.aegis.Advice;
 import org.ebayopensource.aegis.CExpr;
-import org.ebayopensource.aegis.Rule;
+import org.ebayopensource.aegis.Context;
 import org.ebayopensource.aegis.Decision;
-import org.ebayopensource.aegis.Environment;
+import org.ebayopensource.aegis.Rule;
 import org.ebayopensource.aegis.plugin.RuleEvaluator;
 
 /**
@@ -30,10 +30,10 @@ import org.ebayopensource.aegis.plugin.RuleEvaluator;
   */
 public class GenericRuleEvaluator implements RuleEvaluator
 {
-    public void initialize(HashMap props) 
+    public void initialize(Context props) 
     {
     }
-    public Decision evaluate(Rule rule, List<Environment> context) throws Exception
+    public Decision evaluate(Rule rule, Context context) throws Exception
     {
         // TODO
         Decision d = new Decision(Decision.RULE_MATCH);

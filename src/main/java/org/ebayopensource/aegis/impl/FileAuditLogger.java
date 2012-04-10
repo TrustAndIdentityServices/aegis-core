@@ -56,8 +56,8 @@ public class FileAuditLogger implements AuditLogger
      * @param msgid
      * @param message
      */
-    public void log(String type, String msgid, String target, String message)
+    public void log(int ctxid, String type, String msgid, String target, String message)
     {
-        m_ps.println(new Date()+"||"+type+"||"+msgid+"||"+target+"||"+message);
+        m_ps.println(new Date()+"||"+ctxid+"||"+type+"||"+msgid+"||"+target+"||"+message);
     }
 }

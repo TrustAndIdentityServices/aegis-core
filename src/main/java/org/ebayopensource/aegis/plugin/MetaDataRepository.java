@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * 
  *  Copyright (c) 2006-2012 eBay Inc. All Rights Reserved.
@@ -11,16 +10,13 @@
 *******************************************************************************/
 package org.ebayopensource.aegis.plugin;
 
-import java.util.HashMap;
+import java.util.Properties;
 import java.util.List;
 
-import org.ebayopensource.aegis.Environment;
-import org.ebayopensource.aegis.Context;
-import org.ebayopensource.aegis.Decision;
-import org.ebayopensource.aegis.Rule;
-
-public interface RuleEvaluator
+// Interface to plugin alternative storage for MetaData
+public interface MetaDataRepository
 {
-    public void initialize(Context ctx);
-    public Decision evaluate(Rule condition, Context context) throws Exception;
+    public void initialize(Properties props) throws Exception;
+    public String getProperty(String key);
+    public void setProperty(String key, String value);
 }

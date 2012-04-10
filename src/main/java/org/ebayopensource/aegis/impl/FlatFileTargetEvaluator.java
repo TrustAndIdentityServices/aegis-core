@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import org.ebayopensource.aegis.Target;
-import org.ebayopensource.aegis.Environment;
+import org.ebayopensource.aegis.Context;
 import org.ebayopensource.aegis.plugin.TargetEvaluator;
 import org.ebayopensource.aegis.debug.Debug;
 import org.ebayopensource.aegis.md.MetaData;
@@ -28,27 +28,27 @@ import org.ebayopensource.aegis.md.MetaData;
   */
 public class FlatFileTargetEvaluator extends GenericTargetEvaluator
 {
-    public void initialize(HashMap props) 
+    public void initialize(Context ctx) 
     {
-        super.initialize(props);
+        super.initialize(ctx);
     }
-    public boolean evaluate(Target reqresource, Target polresource, List<Environment>  context) throws Exception
+    public boolean evaluate(Target reqresource, Target polresource, Context context) throws Exception
     {
         String polcategory = polresource.getType();
         // Get membership attribute
-        String membershipAttr = MetaData.getMembershipAttribute(polcategory);
+        String membershipAttr = context.getMetaData().getMembershipAttribute(polcategory);
         if (!reqresource.getType().equals(membershipAttr))
             return false;
 
         // Check membership - is membershipAttr value a member of assertion name
-        boolean match = checkMembership(polcategory, polresource.getName(), reqresource.getName());
+        boolean match = isMember(polcategory, polresource.getName(), reqresource.getName(), context);
         Debug.message("FlatFileTargetEvaluator", "evaluate:match="+match);
         return match;
     }
-    private boolean checkMembership(String parentcategory, Object parentname, Object member)
+    private boolean isMember(String parentcategory, Object parentname, Object member, Context context)
     {
         // Get Attribute store directory - 
-        String ffdirname = MetaData.getProperty(MetaData.FLATFILE_ATTRIBUTE_STORE);
+        String ffdirname = context.getMetaData().getProperty(MetaData.FLATFILE_ATTRIBUTE_STORE);
         String ffgroupfilename = ffdirname+"/attrgroups.txt";
         String ffmembersdir = ffdirname+"/groupmembers/";
 
@@ -77,7 +77,7 @@ public class FlatFileTargetEvaluator extends GenericTargetEvaluator
                 }
             }
         } catch (Exception ex) {
-            Debug.error("FlatFileAssertionEvaluator", "checkMembership failed to read groups file.", ex);
+            Debug.error("FlatFileAssertionEvaluator", "isMember failed to read groups file.", ex);
             return false;
         } finally {
             if (rdr != null) 
@@ -88,7 +88,7 @@ public class FlatFileTargetEvaluator extends GenericTargetEvaluator
 
         if (ids == null) {
             // Not found! - assertion uses non-existant group. TODO : implement bad policy support.
-            Debug.error("FlatFileAssertionEvaluator", "checkMembership:Group not found."+parentcategory+":"+parentname);
+            Debug.error("FlatFileAssertionEvaluator", "isMember:Group not found."+parentcategory+":"+parentname);
             return false;
         }
         // Iterate group members and see if contain  member
@@ -109,7 +109,7 @@ public class FlatFileTargetEvaluator extends GenericTargetEvaluator
                 }
             }
         } catch (Exception ex) {
-            Debug.error("FlatFileAssertionEvaluator", "checkMembership failed to read members file.", ex);
+            Debug.error("FlatFileAssertionEvaluator", "isMember failed to read members file.", ex);
             return false;
         } finally {
             if (rdr != null) 

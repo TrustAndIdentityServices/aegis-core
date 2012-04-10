@@ -14,12 +14,17 @@ package org.ebayopensource.aegis.plugin;
 import java.util.HashMap;
 import java.util.List;
 
-import org.ebayopensource.aegis.Environment;
+import org.ebayopensource.aegis.Context;
 import org.ebayopensource.aegis.Assertion;
 import org.ebayopensource.aegis.Decision;
 
+/**
+  * Plugin interface for evaluating <code>Assertion</code>s in a policy
+  */
 public interface AssertionEvaluator
 {
-    public void initialize(HashMap props);
-    public Decision evaluate(Assertion assertion, List<Environment> context) throws Exception;
+    public void initialize(Context context);
+    public Object getValue(String id, Context context);
+    public boolean isMember(String parentcategory, Object parentname, Object member, Context ctx);
+    public Decision evaluate(Assertion assertion, Context context) throws Exception;
 }
