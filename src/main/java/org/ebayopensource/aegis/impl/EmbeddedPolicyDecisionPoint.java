@@ -22,6 +22,7 @@ import org.ebayopensource.aegis.Decision;
 import org.ebayopensource.aegis.Effect;
 import org.ebayopensource.aegis.Environment;
 import org.ebayopensource.aegis.Expression;
+import org.ebayopensource.aegis.Obligation;
 import org.ebayopensource.aegis.PolicyException;
 import org.ebayopensource.aegis.Rule;
 import org.ebayopensource.aegis.Target;
@@ -55,7 +56,6 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
     private static final String POLICYSTORE_CLASS_PROP = "PolicyStoreClass";
     private Properties m_props = null;
     private PolicyStore m_ps = null;
-    private AuditLogger m_logger = null;
     /**
       * gets a policy <code>Decision</code> for a given input params :
       *  @param subjects <code>List</code> of identities attempting acccess
@@ -131,14 +131,13 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                         sawSilent = true;
                     }
                 }
-                context.logPolicyEval(AUDIT_POLICY, logtype, target, policy, conditionDecision, null);
+                context.logPolicyEval(AUDIT_POLICY, logtype, target, policy, conditionDecision, null, 5);
                 if (policy.isSilent()) { 
                     if (effect == Effect.PERMIT) {
                         conditionDecision.setType(Decision.RULE_MATCH);
                     } else {
                         conditionDecision.setType(Decision.RULE_NOMATCH);
                     }
-                } else {
                 }
                 
                 // Perform conflict resolution Phase 1
@@ -155,12 +154,21 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
         context.getMetaData().getConflictResolver().resolveFinal(decision);
         // Create a Audit log for the final result
         String finallogtype = (decision.getType() == Decision.EFFECT_DENY) ? AUDIT_FINALDECISION_DENY : AUDIT_FINALDECISION_PERMIT ;
-        context.logPolicyEval(AUDIT_POLICY, finallogtype, target, null, decision, "sawSilent="+sawSilent);
+        context.logPolicyEval(AUDIT_POLICY, finallogtype, target, null, decision, "sawSilent="+sawSilent, 2);
     
         // Construct final Decision
+        // Add global Obligations : log
+        addLogObligation(decision, context);
         return decision;
     }
-
+    private void addLogObligation(Decision decision, Context ctx)
+    {
+         if (ctx.getLogObligationFlag() == false)
+             return;
+         Obligation o = new Obligation("LOG");
+         o.setAttribute("LOGRECORD", ctx.getCompleteLogRecord());
+         decision.addObligation(o);
+    }
     private boolean targetMatches(Target reqtarget, List<Target> ptargets, Context context)
     {
         boolean match = false;

@@ -17,22 +17,32 @@ import org.ebayopensource.aegis.debug.Debug;
 
 public class Context
 {
-    public final static String ETAG_PROPERTY="PDP_ETAG";
+    public final static String ETAG_PROPERTY            = "PDP_ETAG";
+    public final static String AUDIT_LOG_LEVEL_PARAM    = "AUDIT_LOG_LEVEL";
+    public final static String PDP_LOG_OBLIGATION_PARAM = "PDP_LOG_OBLIGATION";
     public final static String
             METADATA_REPOSITORY_CLASS_PARAM="METADATA_REPOSITORY_CLASS";
     public final static String
             AUDIT_LOG_CLASS_PARAM="AUDIT_LOG_CLASS";
     public static String DEFAULT_AUDIT_LOG_CLASS =
              "org.ebayopensource.aegis.impl.FileAuditLogger";
-//org.ebayopensource.aegis.impl.DefaultMetaDataRepository
-    static private String   lock    = "lock";
-    static private Properties   s_props    = null;
-    static private MetaData  s_metadata   = null;
-    static private AuditLogger  s_logger   = null;
-    static  private int         s_etag   = -1;
-    private int                 m_id   = 0;
+     
+
+    static private String      lock       = "lock";
+    static private Properties  s_props    = null;
+    static private MetaData    s_metadata = null;
+    static private AuditLogger s_logger   = null;
+    static  private int        s_etag     = -1;
+    private int                m_id       = 0;
     private HashMap<String,Object> m_sharedState = null;
-    private List<Environment> m_environment = null;
+    private List<Environment> m_environment      = null;
+    private StringBuilder m_logstring            = null;
+
+    // Flag to pass logging obligation to caller
+    private static boolean s_logObligation = false;
+
+    // Log level
+    private static int s_loglevel = 10;
 
     public Context(Properties pdpprops, List<Environment> env) throws Exception
     {
@@ -64,6 +74,10 @@ public class Context
             } catch (Exception ex) {
                 Debug.error("Context", "Failed to load AuditLogger :", ex);
             }
+            s_logObligation = ("true".equals(s_props.getProperty(PDP_LOG_OBLIGATION_PARAM)));
+            String loglevel = s_props.getProperty(AUDIT_LOG_LEVEL_PARAM);
+            if (loglevel != null)
+                s_loglevel = Integer.parseInt(loglevel);
             // Initialize Metadata
             s_metadata = new MetaData();
             s_metadata.loadProperties(s_props);
@@ -119,8 +133,10 @@ public class Context
     {
         return s_etag;
     }
-    public void logPolicyEval(String logtype, String logsubtype, Target target, Policy policy, Decision decision, String extra)
+    public void logPolicyEval(String logtype, String logsubtype, Target target, Policy policy, Decision decision, String extra, int level)
     {
+        if (level > s_loglevel)
+            return;
         String policystr = (policy == null) ? "" : "PolicyName="+policy.getName()+"&PolicyID="+policy.getId()+"&silent="+policy.isSilent();
         String decisionstr = "&Decision="+decision;
         String extraStr = (extra == null) ? "" : extra;
@@ -131,5 +147,45 @@ public class Context
                      target.getType()+":"+target.getName(),
                      policystr+
                      decisionstr+extraStr);
+        addLogRecord(
+                     getId(),
+                     logtype,
+                     logsubtype,
+                     target.getType()+":"+target.getName(),
+                     policystr+
+                     decisionstr+extraStr);
+    }
+
+    public boolean getLogObligationFlag()
+    {
+        return s_logObligation ;
+    }
+
+    public String getCompleteLogRecord()
+    {
+        return m_logstring.toString();
+    }
+
+    private void addLogRecord( int id, String type, String subtype, String target, String data) 
+    {
+        if (m_logstring == null)
+            m_logstring = new StringBuilder();
+        m_logstring.append("<log>");
+          m_logstring.append("<id>");
+            m_logstring.append(id);
+          m_logstring.append("</id>");
+          m_logstring.append("<type>");
+            m_logstring.append(type);
+          m_logstring.append("</type>");
+          m_logstring.append("<subtype>");
+            m_logstring.append(subtype);
+          m_logstring.append("</subtype>");
+          m_logstring.append("<target>");
+            m_logstring.append(target);
+          m_logstring.append("</target>");
+          m_logstring.append("<data><![CDATA[");
+            m_logstring.append(data);
+          m_logstring.append("]]></data>");
+        m_logstring.append("</log>");
     }
 }

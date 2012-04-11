@@ -23,6 +23,65 @@ import java.util.Properties;
 import org.ebayopensource.aegis.debug.Debug;
 import org.junit.Before;
 import org.junit.Test;
+/**
+  * This test is driven by PDPSessionPolicy.properties, SessionMetaData.properties and SessionPolicies.json.
+  * And a custom AssertionEvaluator : <code>SessionCookieAssertionEvaluator</code>
+  * The policies are copied below for easy reference.
+  * <br>
+  * <code>
+  * { "Policy" : 
+  *   { "silent" : false, "name" : "L0Personalization", "description" : "", "effect" : "PERMIT",
+  *     "target" : [ [  "webcmd", "L0CMD"  ] ],
+  *     "rules" : [ 
+  *       {  "category" : "Session" , "ALL_OF" : [ 
+  *         [ "Authenticated", "=", true ] ,
+  *         [ "FreshnessFromStartTime", "<", 525600 ] ,
+  *         [ "ConfirmedUser", "=", true ] ,
+  *         [ "IdentityProvider", "=", "EBAY" ] ,
+  *         [ "TokenType", "=", "EBAY_COOKIE" ] ]
+  *       } ]
+  *   }
+  *  }
+  * { "Policy" :
+  *   { "silent" : false, "name" : "L1SessionPolicy", "description" : "", "effect" : "PERMIT",
+  *     "target" : [ [  "webcmd", "L1CMD"  ] ],
+  *     "rules" : [
+  *       {  "category" : "Session" , "ALL_OF" : [ 
+  *          [ "Authenticated", "=", true ] ,
+  *          [ "FreshnessFromStartTime", "<", 1440 ] ,
+  *          [ "ConfirmedUser", "=", true ] ,
+  *          [ "IdentityProvider", "=", "EBAY" ] ,
+  *          [ "TokenType", "=", "EBAY_COOKIE" ] ]
+  *       } ]
+  *    }
+  * }
+  * { "Policy" :
+  *   { "silent" : false, "name" : "L2SessionPolicy", "description" : "", "effect" : "PERMIT",
+  *     "target" : [ [  "webcmd", "L2CMD"  ] ],
+  *     "rules" : [ 
+  *       {  "category" : "Session" , "ALL_OF" : [
+  *          [ "Authenticated", "=", true ] ,
+  *          [ "FreshnessFromStartTime", "<", 20 ] ,
+  *          [ "ConfirmedUser", "=", true ] ,
+  *          [ "IdentityProvider", "=", "EBAY" ] ,
+  *          [ "TokenType", "=", "EBAY_COOKIE" ] ,
+  *          [ "BrowserSession", "=", true ] ]
+  *       } ]
+  *     }
+  * }
+  * </code>
+  * <br>
+  * USERSESSION Cookie format :<br>
+  * <code>
+  * <Valid>:<authNtime>:<userid>:<userconfirmed>:<IDP>:<tokentype>:<browsersession>
+  * </code>
+  * <br>Examples:
+  * <code>
+  * VALID:20120401130000-700:testuser1:CONFIRMED:Facebook:EBAY_COOKIE:BROWSERSESSION
+  * INVALID:20120401130000-700:testuser1:UNCONFIRMED:::
+  * </code>
+  *
+  */
 
 public class SessionPoliciesTest
 {
@@ -47,11 +106,20 @@ public class SessionPoliciesTest
     @Test
     public void testL0TimeExceeded() {
         Target resource = new Target("webcmd", "L0CMD");
+
+        StringBuilder cookieval = new StringBuilder();
+        // Construct the cookie value with all valid attrs except Freshness
+        cookieval.append("VALID").append(":")
+                 .append(getDateBefore(L0MAX+1)).append(":")
+                 .append("usertest1").append(":")
+                 .append("CONFIRMED").append(":")
+                 .append("EBAY").append(":")
+                 .append("EBAY_COOKIE").append(":")
+                 .append("BROWSERSESSION").append(":");
+
         List<Environment> env = new ArrayList<Environment>();
         ArrayList<HttpCookie> cookies = new ArrayList<HttpCookie>();
-        cookies.add(new HttpCookie("COOKIE_USERID", "usertest"));
-        cookies.add(new HttpCookie("COOKIE_SESSION", "11111111"));
-        cookies.add(new HttpCookie("COOKIE_AUTHNDATE", getDateBefore(L0MAX+1)));
+        cookies.add(new HttpCookie("USERSESSION", cookieval.toString()));
         Environment env1 = new Environment("Session", "env1");
         env1.setAttribute("HTTPCOOKIES", cookies);
         env.add(env1);
