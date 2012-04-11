@@ -111,7 +111,7 @@ public class SessionPoliciesTest
         // Construct the cookie value with all valid attrs except Freshness
         cookieval.append("VALID").append(":")
                  .append(getDateBefore(L0MAX+1)).append(":")
-                 .append("usertest1").append(":")
+                 .append("usertest1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx").append(":")
                  .append("CONFIRMED").append(":")
                  .append("EBAY").append(":")
                  .append("EBAY_COOKIE").append(":")
@@ -132,6 +132,8 @@ public class SessionPoliciesTest
         assertEquals(Decision.EFFECT_DENY, decision.getType());
         List<Advice> advs = decision.getAdvices();
         assertEquals(true, advs != null);
+        Advice adv = advs.get(0);
+        assertEquals(adv.toString().contains("FreshnessFromStartTime"), true);
     }
 
     private String getDateBefore(long l)

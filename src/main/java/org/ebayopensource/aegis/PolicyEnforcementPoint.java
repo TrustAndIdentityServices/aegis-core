@@ -16,6 +16,7 @@ import org.ebayopensource.aegis.debug.Debug;
 
 public class PolicyEnforcementPoint
 {
+    final private static String VERSION = "1.0.0";
     public static final String PDP_CLASS = "PDP_CLASS";
     public static final String DEFAULT_PDP_CLASS = "org.ebayopensource.aegis.impl.EmbeddedPolicyDecisionPoint";
 
@@ -37,5 +38,12 @@ public class PolicyEnforcementPoint
         return impl;
     }
 
+    /**
+      * Returns version of this PEP.
+      */
+    public static String getVersion()
+    {
+        return VERSION;
+    }
 }
   

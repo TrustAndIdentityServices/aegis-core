@@ -113,13 +113,18 @@ public class Context
          m_sharedState.put(key, value);
     }
     
+    /**
+      * Maps the attribute name defined in a policy to application attribute and
+      * searches for the attribute in the <code>Environment</code>
+      */
     public Object getEnvValue(String id)
     {
         Object cval = null;
         if (m_environment == null)
             return cval;
+        String envid = s_metadata.getMappingEnvAttribute(id);
         for (Environment env : m_environment) {
-            cval = env.getAttribute(id);
+            cval = env.getAttribute(envid);
             if (cval != null)
                 break;
         }

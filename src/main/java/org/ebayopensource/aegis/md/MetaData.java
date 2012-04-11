@@ -124,8 +124,30 @@ public class MetaData
             throw(ex);
         } 
     }
+
+    /**
+      * Returns the attribute name of the entities that are members of the given group entity.
+      * The framework will expect a value of this attribute name in the <code>Envirenment</code>
+      * to evaluate groups defined in policies during policy evaluation.
+      */
     public String getMembershipAttribute(String cat)
     {
         return m_props.getProperty("group."+cat+".membername");
+    }
+
+    /**
+      * Returns the attribute name of the entity in context of the <code>Environment</code>
+      *  that is mapped to the given policy attribute.
+      * The framework will expect a value of this attribute name in the <code>Envirenment</code>
+      * during policy evaluation.<br>
+      * If the mapping is not specified, attr name is assumed to be same as policy attribute name.
+      */
+    public String getMappingEnvAttribute(String cat)
+    {
+        String attr = m_props.getProperty("attr."+cat+".mappingattr");
+        if (attr != null)
+            return attr;
+        else 
+            return cat;
     }
 }

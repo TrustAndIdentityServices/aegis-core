@@ -249,15 +249,14 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                         if (aeval != null) {
                             try {
                                 da = aeval.evaluate(assertion, context);
-                                amatch = (da.getType() == Decision.RULE_MATCH);
                                 Debug.message("PolicyEval", "ruleMatches: asserteval: "+rule+ " amatch="+amatch);
-                                // Check combiner rules..
-                                afinalmatch = processDecision( da, amatch, acombiner, afinaldecision, afinalmatch); 
                             } catch(Exception ex) {
-                                // TODO simply ignore, log error and continue for now..
                                 Debug.error("PolicyEval", "getPolicyDecision:ruleMatches=",ex);
-                                continue;
+                                da = new Decision(Decision.RULE_NOMATCH);
                             }
+                            // Check combiner rules..
+                            amatch = (da.getType() == Decision.RULE_MATCH);
+                            afinalmatch = processDecision( da, amatch, acombiner, afinaldecision, afinalmatch); 
                         }
                     }
                     d = afinaldecision;
@@ -274,7 +273,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
     private boolean processDecision(Decision d, boolean match, int combiner,
                                     Decision finaldecision, boolean finalmatch) 
     {
-        Debug.message("EmbeddedPolicyDecision", "process:START:"+match);
+        Debug.message("EmbeddedPolicyDecision", "processDecision:start:"+match);
         // Check combiner rules..
         if (combiner == Expression.ALL_OF && match == false)
             finalmatch= false; // We are done here

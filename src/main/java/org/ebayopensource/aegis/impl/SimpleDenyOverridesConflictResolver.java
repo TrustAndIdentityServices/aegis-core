@@ -53,8 +53,10 @@ public class SimpleDenyOverridesConflictResolver implements ConflictResolver
                 case Effect.UNKNOWN :
                     if (effect == Effect.PERMIT) {
                         // Copy advices...
-                        for (Advice adv : conditiondecision.getAdvices()) {
-                            currentdecision.addAdvice(adv);
+                        if (conditiondecision.getAdvices() != null) {
+                            for (Advice adv : conditiondecision.getAdvices()) {
+                                currentdecision.addAdvice(adv);
+                            }
                         }
                     } else {
                         // Leave the policy as inconclusive

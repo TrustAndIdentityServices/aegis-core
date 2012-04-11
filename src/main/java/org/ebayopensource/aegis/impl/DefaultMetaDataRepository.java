@@ -62,8 +62,12 @@ public class DefaultMetaDataRepository implements MetaDataRepository
                     m_props.load((fin = url.openStream()));
                 } else {
                     location = PDPProperties.getProperty(METADATA_CONFIG_CLASSPATH_PARAM);
-                    if (location != null)
+                    if (location != null) {
+                        Debug.message("MetaData", "loadProperties : classp="+location);
                         m_props.load(fin = Thread.currentThread().getContextClassLoader().getResourceAsStream(location));
+                    } else {
+                        Debug.message("MetaData", "loadProperties: no MetaData specified.");
+                    }
                 }
            }
         } catch (Exception ex) {

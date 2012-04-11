@@ -43,8 +43,8 @@ public abstract class BaseAssertionEvaluator implements AssertionEvaluator
         Advice adv = null;
         Object cval = getValue(e.id_, ctx);
         Object eval = e.val_;
-        Debug.message("BaseAssertionEvaluator", "evaluale:c="+cval+
-                        " op="+ e.op_+ " e="+eval);
+        Debug.message("BaseAssertionEvaluator", "evaluate: cval="+cval+
+                        " for expr: id="+e.id_ +" op="+ e.op_+ " e="+eval);
         boolean match = false;
 
         // WILD_CHAR
