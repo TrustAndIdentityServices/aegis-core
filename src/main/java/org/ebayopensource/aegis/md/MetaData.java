@@ -132,7 +132,7 @@ public class MetaData
       */
     public String getMembershipAttribute(String cat)
     {
-        return m_props.getProperty("group."+cat+".membername");
+        return getProperty("group."+cat+".membername");
     }
 
     /**

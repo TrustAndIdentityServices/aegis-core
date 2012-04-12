@@ -37,8 +37,10 @@ public class FlatFileTargetEvaluator extends GenericTargetEvaluator
         String polcategory = polresource.getType();
         // Get membership attribute
         String membershipAttr = context.getMetaData().getMembershipAttribute(polcategory);
-        if (!reqresource.getType().equals(membershipAttr))
+        Debug.message("FlatFileTargetEvaluator", "evaluate: polcategory="+polcategory+"="+membershipAttr);
+        if (!reqresource.getType().equals(membershipAttr)) {
             return false;
+        }
 
         // Check membership - is membershipAttr value a member of assertion name
         boolean match = isMember(polcategory, polresource.getName(), reqresource.getName(), context);
@@ -48,9 +50,11 @@ public class FlatFileTargetEvaluator extends GenericTargetEvaluator
     private boolean isMember(String parentcategory, Object parentname, Object member, Context context)
     {
         // Get Attribute store directory - 
-        String ffdirname = context.getMetaData().getProperty(MetaData.FLATFILE_ATTRIBUTE_STORE);
+        String ffdirname = context.getPDPProperty(MetaData.FLATFILE_ATTRIBUTE_STORE);
         String ffgroupfilename = ffdirname+"/attrgroups.txt";
         String ffmembersdir = ffdirname+"/groupmembers/";
+        Debug.message("FlatFileAssertionEvaluator", "isMember : dir="+ffdirname+
+                                                    " grpfile="+ffgroupfilename+" mdir="+ffmembersdir);
 
         // Read thru groups to find parent UUID matching parent category parent name
         // attrgroups.txt - contains parents (format : UUID|category|name|description )

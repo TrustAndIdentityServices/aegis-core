@@ -81,9 +81,11 @@ public class FlatFileAssertionEvaluator extends GenericAssertionEvaluator
             // Its okay to ignore this error - fall back is exhaustive search below
         }
         // Get Attribute store directory - 
-        String ffdirname = ctx.getMetaData().getProperty(MetaData.FLATFILE_ATTRIBUTE_STORE);
+        String ffdirname = ctx.getPDPProperty(MetaData.FLATFILE_ATTRIBUTE_STORE);
         String ffgroupfilename = ffdirname+"/attrgroups.txt";
         String ffmembersdir = ffdirname+"/groupmembers/";
+        Debug.message("FlatFileAssertionEvaluator", "isMember : dir="+ffdirname+
+                                                    " grpfile="+ffgroupfilename+" mdir="+ffmembersdir);
 
         // Read thru groups to find parent UUID matching parent category parent name
         // attrgroups.txt - contains parents (format : UUID|category|name|description )

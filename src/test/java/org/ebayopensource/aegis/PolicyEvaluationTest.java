@@ -38,7 +38,7 @@ public class PolicyEvaluationTest
     }
 
     @Test
-    public void testSimpleAdvice() {
+    public void testSimpleAdvice1() {
         Target resource = new Target("web", "http://www.ebay.com/xxx");
         List<Environment> env = new ArrayList<Environment>();
         Environment env1 = new Environment("session", "env1");
@@ -47,6 +47,23 @@ public class PolicyEvaluationTest
         env.add(env1);
         Decision decision = 
             pdp.getPolicyDecision( resource, env);
+        Debug.message("TEST", decision.toString());
+        // Decision should not be null
+        assertEquals(true, decision != null);
+        // Decision should be DENY
+        assertEquals(Decision.EFFECT_DENY, decision.getType());
+        List<Advice> advs = decision.getAdvices();
+        assertEquals(true, advs != null);
+        assertEquals(2, advs.size());
+        
+    }
+    @Test
+    public void testSimpleAdvice2() {
+        Target resource = new Target("web", "http://www.ebay.com/xxx");
+        Environment env1 = new Environment("session", "env1");
+        env1.setAttribute("authn.level", new Integer(0));
+        Decision decision = 
+            pdp.getPolicyDecision( resource, env1);
         Debug.message("TEST", decision.toString());
         // Decision should not be null
         assertEquals(true, decision != null);
