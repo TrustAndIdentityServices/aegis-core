@@ -144,7 +144,8 @@ public class MetaData
       */
     public String getMappingEnvAttribute(String cat)
     {
-        String attr = m_props.getProperty("attr."+cat+".mappingattr");
+        String mname = "attr."+cat+".mappingattr";
+        String attr = getProperty(mname);
         if (attr != null)
             return attr;
         else 

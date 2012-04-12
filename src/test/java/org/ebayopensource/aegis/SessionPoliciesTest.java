@@ -39,7 +39,8 @@ import org.junit.Test;
   *         [ "ConfirmedUser", "=", true ] ,
   *         [ "IdentityProvider", "=", "EBAY" ] ,
   *         [ "TokenType", "=", "EBAY_COOKIE" ] ]
-  *       } ]
+  *       },
+  *       {  "category" : "Subject" , "ALL_OF" : [  [ "BusinessRole", "=", "BUYER" ] ] } ]
   *   }
   *  }
   * { "Policy" :
@@ -52,7 +53,8 @@ import org.junit.Test;
   *          [ "ConfirmedUser", "=", true ] ,
   *          [ "IdentityProvider", "=", "EBAY" ] ,
   *          [ "TokenType", "=", "EBAY_COOKIE" ] ]
-  *       } ]
+  *       },
+  *     {  "category" : "Subject" , "ALL_OF" : [  [ "BusinessRole", "=", "BUYER" ] ] } ]
   *    }
   * }
   * { "Policy" :
@@ -85,9 +87,9 @@ import org.junit.Test;
 
 public class SessionPoliciesTest
 {
-    private long L0MAX = 525600;
-    private long L1MAX = 1440;
-    private long L2MAX = 20;
+    private int L0MAX = 525600;
+    private int L1MAX = 1440;
+    private int L2MAX = 20;
     private PolicyDecisionPoint pdp = null;
     @Before
     public void setUp()
@@ -104,14 +106,35 @@ public class SessionPoliciesTest
     }
 
     @Test
-    public void testL0TimeExceeded() {
-        Target resource = new Target("webcmd", "L0CMD");
+    public void testL0DenyTimeExceeded() {
+        Decision decision = callPDP("L0CMD", L0MAX+1, "SELLER");
+        // Decision should not be null
+        assertEquals(true, decision != null);
+        // Decision should be DENY
+        assertEquals(Decision.EFFECT_DENY, decision.getType());
+        List<Advice> advs = decision.getAdvices();
+        assertEquals(true, advs != null);
+        Advice adv = advs.get(0);
+        assertEquals(adv.toString().contains("FreshnessFromStartTime"), true);
+    }
+    @Test
+    public void testL1Permit() {
+        Decision decision = callPDP("L1CMD", L1MAX-1, "BUYER");
+        // Decision should not be null
+        assertEquals(true, decision != null);
+        // Decision should be PERMIT
+        assertEquals(Decision.EFFECT_PERMIT, decision.getType());
+    }
+
+    private Decision callPDP(String cmd, int befminutes, String bizrole)
+    {
+        Target resource = new Target("webcmd", cmd);
 
         StringBuilder cookieval = new StringBuilder();
         // Construct the cookie value with all valid attrs except Freshness
         cookieval.append("VALID").append(":")
-                 .append(getDateBefore(L0MAX+1)).append(":")
-                 .append("usertest1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx").append(":")
+                 .append(getDateBefore(befminutes)).append(":")
+                 .append("usertest1").append(":")
                  .append("CONFIRMED").append(":")
                  .append("EBAY").append(":")
                  .append("EBAY_COOKIE").append(":")
@@ -123,19 +146,14 @@ public class SessionPoliciesTest
         Environment env1 = new Environment("Session", "env1");
         env1.setAttribute("HTTPCOOKIES", cookies);
         env.add(env1);
+        Environment env2 = new Environment("Subject", "env2");
+        env2.setAttribute("bizrole", bizrole);
+        env.add(env2);
         Decision decision = 
             pdp.getPolicyDecision( resource, env);
         Debug.message("L0Test", decision.toString());
-        // Decision should not be null
-        assertEquals(true, decision != null);
-        // Decision should be DENY
-        assertEquals(Decision.EFFECT_DENY, decision.getType());
-        List<Advice> advs = decision.getAdvices();
-        assertEquals(true, advs != null);
-        Advice adv = advs.get(0);
-        assertEquals(adv.toString().contains("FreshnessFromStartTime"), true);
+        return decision;
     }
-
     private String getDateBefore(long l)
     {
         SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmssZ");

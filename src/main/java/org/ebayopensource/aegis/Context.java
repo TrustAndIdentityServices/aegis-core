@@ -123,6 +123,7 @@ public class Context
         if (m_environment == null)
             return cval;
         String envid = s_metadata.getMappingEnvAttribute(id);
+        Debug.message("Context", "getEnvValue: mapping : "+id+"="+envid);
         for (Environment env : m_environment) {
             cval = env.getAttribute(envid);
             if (cval != null)

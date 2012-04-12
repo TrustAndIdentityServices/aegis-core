@@ -22,9 +22,9 @@ public class Debug
     final static String LEVEL_WARNING_STR = "warning";
     final static String LEVEL_ERROR_STR   = "error";
 
-    final static int LEVEL_MESSAGE = 3;
-    final static int LEVEL_WARNING = 2;
-    final static int LEVEL_ERROR =   1;
+    final public static int LEVEL_MESSAGE = 3;
+    final public static int LEVEL_WARNING = 2;
+    final public static int LEVEL_ERROR =   1;
 
     final static String DEFAULT_DEBUG_FILE = "debug.txt";
 
@@ -75,7 +75,7 @@ public class Debug
     /**
      * Get Debug level
      */
-    public static int getLevel(String level)
+    public static int getLevel()
     {
          return s_level;
     }
