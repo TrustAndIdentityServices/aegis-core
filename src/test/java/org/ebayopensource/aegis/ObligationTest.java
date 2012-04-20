@@ -17,6 +17,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import java.util.Set;
+
 public class ObligationTest {
 	
     static private String type = "typex";
@@ -62,7 +64,33 @@ public class ObligationTest {
         assertEquals(obligation.getAttribute(attr1), val1);
         obligation.setAttribute(attr2, val2);
         assertEquals(obligation.getAttribute(attr2), val2);
- 
+    }
+    @Test
+    public void testGetAttributeIds() {
+        Obligation obligation = new Obligation(type); 
+        obligation.setAttribute(attr1, val1);
+        obligation.setAttribute(attr2, val2);
+        Set<String> ks = obligation.getAttributeIds();
+        assertEquals(ks.size(), 2);
+        boolean attr1Seen = false;
+        boolean attr2Seen = false;
+        for (String s : ks) {
+            String v = (String) obligation.getAttribute(s);
+            assert(v != null);
+            if (attr1.equals(s)) {
+                assertEquals(v, val1);
+                attr1Seen = true;
+            } else if (attr2.equals(s)) {
+                assertEquals(v, val2);
+                attr2Seen = true;
+            }
+        }
+        assert(attr1Seen && attr2Seen);
+    }
+    public void testGetAttributeIdsNull() {
+        Obligation obligation = new Obligation(type); 
+        Set<String> ks = obligation.getAttributeIds();
+        assertEquals(ks, null);
     }
     @Test
     public void testToString() {

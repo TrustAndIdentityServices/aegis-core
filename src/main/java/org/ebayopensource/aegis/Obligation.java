@@ -11,6 +11,7 @@
 package org.ebayopensource.aegis;
 
 import java.util.HashMap;
+import java.util.Set;
 
 public class Obligation
 {
@@ -58,6 +59,18 @@ public class Obligation
         if (m_attrs != null)
             val = m_attrs.get(id);
         return val;
+    }
+
+    /**
+     * Retrieves all keys
+     * @return keys
+     */
+    public Set<String> getAttributeIds()
+    {
+        Set<String> ks = null;
+        if (m_attrs != null)
+            ks = m_attrs.keySet();
+        return ks;
     }
 
 }
