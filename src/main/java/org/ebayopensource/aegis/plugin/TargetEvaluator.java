@@ -19,5 +19,7 @@ import org.ebayopensource.aegis.Target;
 public interface TargetEvaluator
 {
     public void initialize(Context ctx);
+    public Object getValue(String id, Context context);
+    public boolean isMember(String parentcategory, Object parentname, Object member, Context ctx);
     public boolean evaluate(Target reqresource, Target polresource, Context context) throws Exception;
 }

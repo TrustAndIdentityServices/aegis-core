@@ -47,7 +47,7 @@ public class FlatFileTargetEvaluator extends GenericTargetEvaluator
         Debug.message("FlatFileTargetEvaluator", "evaluate:match="+match);
         return match;
     }
-    private boolean isMember(String parentcategory, Object parentname, Object member, Context context)
+    public boolean isMember(String parentcategory, Object parentname, Object member, Context context)
     {
         // Get Attribute store directory - 
         String ffdirname = context.getPDPProperty(MetaData.FLATFILE_ATTRIBUTE_STORE);

@@ -38,4 +38,12 @@ public class GenericTargetEvaluator implements TargetEvaluator
             return reqresource.getType().equals( polresource.getType()) &&
                         reqresource.getName().equals(polresource.getName());
     }
+    public boolean isMember(String parentcategory, Object parentname, Object member, Context context)
+    {
+        return false;
+    }
+    public Object getValue(String nm, Context ctx)
+    {
+        return null;
+    }
 }
