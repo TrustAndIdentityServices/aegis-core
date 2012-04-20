@@ -52,6 +52,8 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
     public static String AUDIT_FINALDECISION_PERMIT     = "FINALDECISION_PERMIT";
     public static String AUDIT_FINALDECISION_DENY       = "FINALDECISION_DENY";
 
+    public static String PERMIT_IF_NO_TARGETS_MATCH_PARAM = "PERMIT_IF_NO_TARGETS_MATCH";
+
     private volatile List<Policy> m_policyCache = null;
     private static final String POLICYSTORE_CLASS_PROP = "PolicyStoreClass";
     private Properties m_props = null;
@@ -97,6 +99,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
    
         Decision decision = new Decision(Effect.UNKNOWN);
         boolean sawSilent = false;
+        int targetMatches = 0;
         // For each policy, execute the conditions - accumulate results from each.
         for (Policy policy : m_policyCache) {
             Debug.message("PolicyEval", "getPolicyDecision:check for policy : "+policy);
@@ -106,6 +109,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
             try {
                 if (!targetMatches(target, policy.getTargets(), context))
                     continue;
+                targetMatches++;
                 // Check Rules and collect applicable Obligations and Advices
                 int effect = policy.getEffect().get();
                 Decision conditionDecision = ruleMatches(policy.getRules(), context, (effect == Effect.PERMIT));
@@ -150,25 +154,31 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                 continue;
             }
         }
-        // Perform conflict 2 resolution here
-        context.getMetaData().getConflictResolver().resolveFinal(decision);
+        // Perform conflict resolution : phase 2 here
+        // If PDP is configured to permit if no targets match at all 
+        if (targetMatches == 0 && "true".equals(m_props.getProperty(PERMIT_IF_NO_TARGETS_MATCH_PARAM))) {
+            Debug.message("PolicyEval", "getPolicyDecision:NO targets matched & permit if no match is true");
+            decision.setType(Decision.EFFECT_PERMIT);
+        } else {
+            context.getMetaData().getConflictResolver().resolveFinal(decision);
+        }
         // Create a Audit log for the final result
         String finallogtype = (decision.getType() == Decision.EFFECT_DENY) ? AUDIT_FINALDECISION_DENY : AUDIT_FINALDECISION_PERMIT ;
+        Obligation logobligation = null;
+        if (context.getLogObligationFlag()) {
+            logobligation = new Obligation("LOG");
+            decision.addObligation(logobligation);
+        }
         context.logPolicyEval(AUDIT_POLICY, finallogtype, target, null, decision, "sawSilent="+sawSilent, 2);
     
         // Construct final Decision
-        // Add global Obligations : log
-        addLogObligation(decision, context);
+        // Optimization : Add global Obligations LOGRECORD attribute *after* audit log is writen out
+        if (logobligation != null) {
+             logobligation.setAttribute("LOGRECORD", context.getCompleteLogRecord());
+        }
         return decision;
     }
-    private void addLogObligation(Decision decision, Context ctx)
-    {
-         if (ctx.getLogObligationFlag() == false)
-             return;
-         Obligation o = new Obligation("LOG");
-         o.setAttribute("LOGRECORD", ctx.getCompleteLogRecord());
-         decision.addObligation(o);
-    }
+
     private boolean targetMatches(Target reqtarget, List<Target> ptargets, Context context)
     {
         boolean match = false;

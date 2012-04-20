@@ -49,12 +49,25 @@ public class LogObligationTest {
 
     @Test
     public void testNoObligation() {
-        Decision decision = executePDP(false);
+        Decision decision = executePDP(false, "CSV");
         assertTrue(decision.getObligations() == null);
     }
     @Test
-    public void testObligation() {
-        Decision decision = executePDP(true);
+    public void testObligationCSV() {
+        Decision decision = executePDP(true, "CSV");
+        Debug.message("obligationTest", decision.getObligations().toString());
+        List<Obligation> obligations = decision.getObligations();
+        assertFalse(obligations == null);
+        Obligation o = obligations.get(0);
+        assertEquals(o.getType(), "LOG");
+        String logdata =(String)  o.getAttribute("LOGRECORD");
+        System.out.println("TEST: logdata="+logdata);
+        assertFalse(logdata == null);
+        assertTrue(logdata.contains(",POLICYEVAL,"));
+    }
+    @Test
+    public void testObligationXML() {
+        Decision decision = executePDP(true, "XML");
         Debug.message("obligationTest", decision.getObligations().toString());
         List<Obligation> obligations = decision.getObligations();
         assertFalse(obligations == null);
@@ -66,7 +79,7 @@ public class LogObligationTest {
         assertTrue(logdata.startsWith("<"));
     }
     
-    private Decision executePDP(boolean logobligation)
+    private Decision executePDP(boolean logobligation, String format)
     {
         // Setup PDP - reuse PDPOnePolicyDataStore.properties
         PolicyDecisionPoint pdp = null;
@@ -75,11 +88,13 @@ public class LogObligationTest {
             URL url = ClassLoader.getSystemResource("PDPOnePolicyDataStore.properties");
             props.load(url.openStream());
             // Just to ensure cache is reloaded
-            props.setProperty("PDP_ETAG", logobligation ? "10101" : "10102");
+            
+            props.setProperty("PDP_ETAG", logobligation ? "10101"+format.hashCode() : "10102"+format.hashCode());
             if (logobligation)
                 props.setProperty("PDP_LOG_OBLIGATION", "true");
             else
                 props.setProperty("PDP_LOG_OBLIGATION", "false");
+            props.setProperty("PDP_LOG_OBLIGATION_FORMAT", format);
             pdp = PolicyEnforcementPoint.getPDP(props);
         } catch (Exception ex) {
             System.out.println("Properties File not found:"+ex);

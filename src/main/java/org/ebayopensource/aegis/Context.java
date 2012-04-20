@@ -20,6 +20,7 @@ public class Context
     public final static String ETAG_PROPERTY            = "PDP_ETAG";
     public final static String AUDIT_LOG_LEVEL_PARAM    = "AUDIT_LOG_LEVEL";
     public final static String PDP_LOG_OBLIGATION_PARAM = "PDP_LOG_OBLIGATION";
+    public final static String PDP_LOG_OBLIGATION_FORMAT_PARAM = "PDP_LOG_OBLIGATION_FORMAT";
     public final static String
             METADATA_REPOSITORY_CLASS_PARAM="METADATA_REPOSITORY_CLASS";
     public final static String
@@ -40,6 +41,8 @@ public class Context
 
     // Flag to pass logging obligation to caller
     private static boolean s_logObligation = false;
+    // Obligation format : CSV || XML
+    private static String s_logobformat = "CSV";
 
     // Log level
     private static int s_loglevel = 10;
@@ -78,6 +81,9 @@ public class Context
             String loglevel = s_props.getProperty(AUDIT_LOG_LEVEL_PARAM);
             if (loglevel != null)
                 s_loglevel = Integer.parseInt(loglevel);
+            String logobformat  = s_props.getProperty(PDP_LOG_OBLIGATION_FORMAT_PARAM);
+            if (logobformat != null)
+                s_logobformat = logobformat;
             // Initialize Metadata
             s_metadata = new MetaData();
             s_metadata.loadProperties(s_props);
@@ -174,8 +180,19 @@ public class Context
 
     private void addLogRecord( int id, String type, String subtype, String target, String data) 
     {
-        if (m_logstring == null)
+        if ("CSV".equals(s_logobformat )) {
+            addLogRecordCSV( id, type, subtype, target, data) ;
+        } else if ("XML".equals(s_logobformat )) {
+            addLogRecordXML( id, type, subtype, target, data);
+        }
+    }
+
+    // Log in XML format
+    private void addLogRecordXML( int id, String type, String subtype, String target, String data) 
+    {
+        if (m_logstring == null) {
             m_logstring = new StringBuilder();
+        }
         m_logstring.append("<log>");
           m_logstring.append("<id>");
             m_logstring.append(id);
@@ -193,5 +210,35 @@ public class Context
             m_logstring.append(data);
           m_logstring.append("]]></data>");
         m_logstring.append("</log>");
+    } 
+    
+    // Log in CSV format
+    private void addLogRecordCSV(int id, String type, String subtype, String target, String data) 
+    {
+        if (m_logstring == null) {
+            m_logstring = new StringBuilder();
+        } else {
+            m_logstring.append(",||,");
+        }
+        encode(""+id).append(",");
+        encode(type).append(",");
+        encode(subtype).append(",");
+        encode(target).append(",");
+        encode(data);
+    }
+    // Escape comma characters only for now
+    private StringBuilder encode(String s)
+    {   
+        if (m_logstring == null)
+            m_logstring = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == ',') {
+                m_logstring.append("%2C");
+            } else { 
+                m_logstring.append(c);
+            }
+        }
+        return m_logstring;
     }
 }

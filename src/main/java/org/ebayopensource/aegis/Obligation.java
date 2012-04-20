@@ -73,4 +73,31 @@ public class Obligation
         return ks;
     }
 
+    /**
+     * Convert to String
+     * @return String
+     */
+    public String toString() 
+    {
+        if (getType() == null)
+            return "";
+ 
+        StringBuilder sb = new StringBuilder();
+        sb.append("{ \"type\" : \"").append(getType()).append("\"");
+        
+        sb.append(", attrs : [");
+
+        Set<String> keys = getAttributeIds();
+
+        if (keys != null) {
+             for (String s : keys) {
+                 sb.append("{ \"").append(s).append("\" : \"").append(getAttribute(s)).append("\" }");
+             }
+        }
+
+        sb.append("] }");
+
+        return sb.toString();
+    }
+
 }
