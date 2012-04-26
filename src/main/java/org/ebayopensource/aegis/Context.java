@@ -149,7 +149,7 @@ public class Context
     {
         if (level > s_loglevel)
             return;
-        String policystr = (policy == null) ? "" : "PolicyName="+policy.getName()+"&PolicyID="+policy.getId()+"&silent="+policy.isSilent();
+        String policystr = (policy == null) ? "" : "PolicyName="+policy.getName()+"&PolicyVersion="+policy.getVersion()+"&PolicyID="+policy.getId()+"&silent="+policy.isSilent();
         String decisionstr = "&Decision="+decision;
         String extraStr = (extra == null) ? "" : extra;
         s_logger.log(
@@ -164,6 +164,7 @@ public class Context
                      logtype,
                      logsubtype,
                      target.getType()+":"+target.getName(),
+                     policy == null? "" : policy.getId(), policy == null? "" : policy.getVersion(),
                      policystr+
                      decisionstr+extraStr);
     }
@@ -178,17 +179,17 @@ public class Context
         return m_logstring.toString();
     }
 
-    private void addLogRecord( int id, String type, String subtype, String target, String data) 
+    private void addLogRecord( int id, String type, String subtype, String target, String policyid, String policyversion, String data) 
     {
         if ("CSV".equals(s_logobformat )) {
-            addLogRecordCSV( id, type, subtype, target, data) ;
+            addLogRecordCSV( id, type, subtype, target, policyid, policyversion, data) ;
         } else if ("XML".equals(s_logobformat )) {
-            addLogRecordXML( id, type, subtype, target, data);
+            addLogRecordXML( id, type, subtype, target, policyid, policyversion, data);
         }
     }
 
     // Log in XML format
-    private void addLogRecordXML( int id, String type, String subtype, String target, String data) 
+    private void addLogRecordXML( int id, String type, String subtype, String target,String policyid, String policyversion,  String data) 
     {
         if (m_logstring == null) {
             m_logstring = new StringBuilder();
@@ -206,6 +207,12 @@ public class Context
           m_logstring.append("<target>");
             m_logstring.append(target);
           m_logstring.append("</target>");
+          m_logstring.append("<policyid>");
+            m_logstring.append(policyid);
+          m_logstring.append("</policyid>");
+          m_logstring.append("<policyversion>");
+            m_logstring.append(policyversion);
+          m_logstring.append("</policyversion>");
           m_logstring.append("<data><![CDATA[");
             m_logstring.append(data);
           m_logstring.append("]]></data>");
@@ -213,7 +220,7 @@ public class Context
     } 
     
     // Log in CSV format
-    private void addLogRecordCSV(int id, String type, String subtype, String target, String data) 
+    private void addLogRecordCSV(int id, String type, String subtype, String target, String policyid, String policyversion, String data) 
     {
         if (m_logstring == null) {
             m_logstring = new StringBuilder();
@@ -224,6 +231,8 @@ public class Context
         encode(type).append(",");
         encode(subtype).append(",");
         encode(target).append(",");
+        encode(policyid).append(",");
+        encode(policyversion).append(",");
         encode(data);
     }
     // Escape comma characters only for now
@@ -231,12 +240,14 @@ public class Context
     {   
         if (m_logstring == null)
             m_logstring = new StringBuilder();
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (c == ',') {
-                m_logstring.append("%2C");
-            } else { 
-                m_logstring.append(c);
+        if (s != null) {
+            for (int i = 0; i < s.length(); i++) {
+                char c = s.charAt(i);
+                if (c == ',') {
+                    m_logstring.append("%2C");
+                } else { 
+                    m_logstring.append(c);
+                }
             }
         }
         return m_logstring;

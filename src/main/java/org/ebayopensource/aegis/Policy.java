@@ -23,6 +23,7 @@ import java.util.ArrayList;
 public class Policy
 {
     private String           m_id;
+    private String           m_version;
     private String           m_name;
     private String           m_description;
     private List<Target>     m_targets;
@@ -52,6 +53,14 @@ public class Policy
     public String getName()
     {
         return m_name;
+    }
+    public String getVersion()
+    {
+        return m_version;
+    }
+    public void setVersion(String version)
+    {
+        m_version = version;
     }
     public String getDescription()
     {
@@ -104,6 +113,11 @@ public class Policy
         sbld.append(     ", \"silent\" : ").append(isSilent());
         sbld.append(     ", \"name\" : \"").append(getName()).append("\"");
         sbld.append(     ", \"description\" : \"").append(getDescription()).append("\"");
+
+        if (m_version != null) {
+            sbld.append(     ", \"version\" : \"").append(m_version).append("\"");
+        }
+
         sbld.append(     ", ").append(getEffect());
 
         sbld.append(     ", \"target\" : [");

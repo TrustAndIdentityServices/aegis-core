@@ -169,7 +169,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
             logobligation = new Obligation("LOG");
             decision.addObligation(logobligation);
         }
-        context.logPolicyEval(AUDIT_POLICY, finallogtype, target, null, decision, "sawSilent="+sawSilent, 2);
+        context.logPolicyEval(AUDIT_POLICY, finallogtype, target, null, decision, "&sawSilent="+sawSilent, 2);
     
         // Construct final Decision
         // Optimization : Add global Obligations LOGRECORD attribute *after* audit log is writen out

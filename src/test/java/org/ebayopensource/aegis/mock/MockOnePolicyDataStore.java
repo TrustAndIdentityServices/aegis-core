@@ -71,6 +71,8 @@ public class MockOnePolicyDataStore implements PolicyStore
 
         Effect effect = new Effect(Effect.PERMIT);
         Policy pol = new Policy("testPolicy", "TEST Policy", targets, rules, effect);
+        pol.setVersion("1.0");
+        pol.setId("1111-2222-3333");
 
         List<Policy> policies = new ArrayList<Policy>();
         policies.add(pol);

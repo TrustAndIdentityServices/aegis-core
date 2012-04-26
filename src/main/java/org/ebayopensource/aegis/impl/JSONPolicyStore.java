@@ -150,12 +150,17 @@ public class JSONPolicyStore implements PolicyStore
             } catch(Exception ex) {}
             boolean silent = false;
             boolean active = true;
+            String version = "0";
             try {
                 silent = policy.getBoolean("silent");
             } catch(Exception ex) {}
             try {
                 active = policy.getBoolean("active");
             } catch(Exception ex) {}
+            try {
+                version = policy.getString("version");
+            } catch(Exception ex) {}
+
             String name = policy.getString("name");
             String desc = policy.getString("description");
             String str = policy.getString("effect");
