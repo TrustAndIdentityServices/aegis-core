@@ -33,6 +33,7 @@ import org.ebayopensource.aegis.PolicyStore;
 import org.ebayopensource.aegis.debug.Debug;
 import org.ebayopensource.aegis.plugin.AssertionEvaluator;
 import org.ebayopensource.aegis.plugin.AuditLogger;
+import org.ebayopensource.aegis.plugin.ConflictResolver;
 import org.ebayopensource.aegis.plugin.TargetEvaluator;
 import org.ebayopensource.aegis.plugin.RuleEvaluator;
 
@@ -143,7 +144,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                     // Perform conflict resolution Phase 1 - for ignoreSilent case
                     if (decisionIgnoringSilentFlag == null)
                         decisionIgnoringSilentFlag = (Decision) decision.deepcopy();
-                    context.getMetaData().getConflictResolver().resolve(policy, decisionIgnoringSilentFlag, conditionDecision);
+                    ((ConflictResolver) context.getMetaData().getConflictResolver()).resolve(policy, decisionIgnoringSilentFlag, conditionDecision);
                     if (effect == Effect.PERMIT) {
                         conditionDecision.setType(Decision.RULE_MATCH);
                     } else {
@@ -152,7 +153,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                 }
                 
                 // Perform conflict resolution Phase 1
-                context.getMetaData().getConflictResolver().resolve(policy, decision, conditionDecision);
+                ((ConflictResolver)context.getMetaData().getConflictResolver()).resolve(policy, decision, conditionDecision);
                 
                 Debug.message("PolicyEval", "Found matching policy:"+policy+" effect="+effect);
             } catch(Exception ex) {
@@ -168,8 +169,8 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
             decision.setType(Decision.EFFECT_PERMIT);
         } else {
             if (decisionIgnoringSilentFlag != null) 
-                context.getMetaData().getConflictResolver().resolveFinal(decisionIgnoringSilentFlag);
-            context.getMetaData().getConflictResolver().resolveFinal(decision);
+                ((ConflictResolver) context.getMetaData().getConflictResolver()).resolveFinal(decisionIgnoringSilentFlag);
+            ((ConflictResolver) context.getMetaData().getConflictResolver()).resolveFinal(decision);
         }
         // Create a Audit log for the final result
         String finallogtype = (decision.getType() == Decision.EFFECT_DENY) ? AUDIT_FINALDECISION_DENY : AUDIT_FINALDECISION_PERMIT ;
@@ -198,7 +199,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
             // Get Eval class..
             //TargetEvaluator reval = context.getMetaData().getTargetEvaluator(reqtarget.getType());
             for (Target pres : ptargets) {
-                TargetEvaluator reval = context.getMetaData().getTargetEvaluator(pres.getType());
+                TargetEvaluator reval = (TargetEvaluator) context.getMetaData().getTargetEvaluator(pres.getType());
                 reval.initialize(context);
                 Debug.message("PolicyEval", "targetMatches: pres=: "+pres);
                 try {
@@ -240,7 +241,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                 Debug.message("PolicyEval", "ruleMatches: pol member: "+rule);
                 Decision d = null;
                 // Get Eval class..
-                RuleEvaluator seval = context.getMetaData().getRuleEvaluator(rule.getCategory());
+                RuleEvaluator seval = (RuleEvaluator) context.getMetaData().getRuleEvaluator(rule.getCategory());
                 if (seval != null) {
                     try {
                         d = seval.evaluate(rule, context);
@@ -263,7 +264,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                     for  (Object aobj : assmembers) {
                         Assertion assertion = (Assertion) aobj;
                         Decision da = null;
-                        AssertionEvaluator aeval = context.getMetaData().getAssertionEvaluator(assertion.getCExpr().id_);
+                        AssertionEvaluator aeval = (AssertionEvaluator) context.getMetaData().getAssertionEvaluator(assertion.getCExpr().id_);
                         aeval.initialize(context);
                         if (aeval != null) {
                             try {

@@ -44,7 +44,7 @@ public class MetaData
 
     private MetaDataRepository metadataRepository = null;
 
-    public TargetEvaluator getTargetEvaluator(String type)
+    public Object getTargetEvaluator(String type)
     {
         try {
             String cl = getProperty( "target."+type+".evalclass");
@@ -57,7 +57,7 @@ public class MetaData
             return null;
         }
     }
-    public RuleEvaluator getRuleEvaluator(String type)
+    public Object getRuleEvaluator(String type)
     {
         try {
             String cl = getProperty( "rule."+type+".evalclass");
@@ -70,7 +70,7 @@ public class MetaData
             return null;
         }
     }
-    public AssertionEvaluator getAssertionEvaluator(String type)
+    public Object getAssertionEvaluator(String type)
     {
         try {
             String cl = getProperty( "assertion."+type+".evalclass");
@@ -83,7 +83,7 @@ public class MetaData
             return null;
         }
     }
-    public ConflictResolver getConflictResolver()
+    public Object getConflictResolver()
     {
         try {
             String cl = getProperty(CONFLICTRESOLVER_CLASS_PARAM);
