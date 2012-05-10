@@ -45,12 +45,13 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
     public static String AUDIT_LOG_CLASS_PARAM          = "AUDIT_LOG_CLASS";
     public static String DEFAULT_AUDIT_LOG_CLASS        = "org.ebayopensource.aegis.impl.FileAuditLogger";
     public static String AUDIT_POLICY                   = "POLICYEVAL";
+    public static String AUDIT_POLICY_FINAL                   = "POLICYEVAL_FINAL";
     public static String AUDIT_POLICY_NOMATCH           = "POLICY_NOMATCH";
     public static String AUDIT_POLICY_PERMIT            = "POLICY_PERMIT";
     public static String AUDIT_POLICY_DENY              = "POLICY_DENY";
-    public static String AUDIT_POLICYEVAL_SILENT_PERMIT = "POLICYEVAL_SILENT_PERMIT";
-    public static String AUDIT_FINALDECISION_PERMIT     = "FINALDECISION_PERMIT";
-    public static String AUDIT_FINALDECISION_DENY       = "FINALDECISION_DENY";
+    public static String AUDIT_POLICYEVAL_SILENT_PERMIT = "POLICY_NOMATCH";
+    public static String AUDIT_FINALDECISION_PERMIT     = "POLICY_PERMIT";
+    public static String AUDIT_FINALDECISION_DENY       = "POLICY_DENY";
 
     public static String PERMIT_IF_NO_TARGETS_MATCH_PARAM = "PERMIT_IF_NO_TARGETS_MATCH";
 
@@ -98,6 +99,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
         Debug.message("PolicyEval", "Start getPolicyDecision");
    
         Decision decision = new Decision(Effect.UNKNOWN);
+        Decision decisionIgnoringSilentFlag = null;
         boolean sawSilent = false;
         int targetMatches = 0;
         // For each policy, execute the conditions - accumulate results from each.
@@ -135,8 +137,13 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                         sawSilent = true;
                     }
                 }
-                context.logPolicyEval(AUDIT_POLICY, logtype, target, policy, conditionDecision, null, 5);
+                context.logPolicyEval(AUDIT_POLICY, logtype, target, policy, conditionDecision, null, null, 5);
+
                 if (policy.isSilent()) { 
+                    // Perform conflict resolution Phase 1 - for ignoreSilent case
+                    if (decisionIgnoringSilentFlag == null)
+                        decisionIgnoringSilentFlag = (Decision) decision.deepcopy();
+                    context.getMetaData().getConflictResolver().resolve(policy, decisionIgnoringSilentFlag, conditionDecision);
                     if (effect == Effect.PERMIT) {
                         conditionDecision.setType(Decision.RULE_MATCH);
                     } else {
@@ -160,6 +167,8 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
             Debug.message("PolicyEval", "getPolicyDecision:NO targets matched & permit if no match is true");
             decision.setType(Decision.EFFECT_PERMIT);
         } else {
+            if (decisionIgnoringSilentFlag != null) 
+                context.getMetaData().getConflictResolver().resolveFinal(decisionIgnoringSilentFlag);
             context.getMetaData().getConflictResolver().resolveFinal(decision);
         }
         // Create a Audit log for the final result
@@ -169,7 +178,7 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
             logobligation = new Obligation("LOG");
             decision.addObligation(logobligation);
         }
-        context.logPolicyEval(AUDIT_POLICY, finallogtype, target, null, decision, "&sawSilent="+sawSilent, 2);
+        context.logPolicyEval(AUDIT_POLICY_FINAL, finallogtype, target, null, decision, decisionIgnoringSilentFlag, "&sawSilent="+sawSilent, 2);
     
         // Construct final Decision
         // Optimization : Add global Obligations LOGRECORD attribute *after* audit log is writen out

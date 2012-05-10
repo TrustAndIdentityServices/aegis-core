@@ -145,7 +145,7 @@ public class Context
     {
         return s_etag;
     }
-    public void logPolicyEval(String logtype, String logsubtype, Target target, Policy policy, Decision decision, String extra, int level)
+    public void logPolicyEval(String logtype, String logsubtype, Target target, Policy policy, Decision decision, Decision decisionifnotsilent, String extra, int level)
     {
         if (level > s_loglevel)
             return;
@@ -163,8 +163,10 @@ public class Context
                      getId(),
                      logtype,
                      logsubtype,
+                     decisionifnotsilent == null? "" : decisionifnotsilent.getTypeStr(),
                      target.getType()+":"+target.getName(),
                      policy == null? "" : policy.getId(), policy == null? "" : policy.getVersion(),
+                     policy == null? "" : ""+policy.isSilent(),
                      policystr+
                      decisionstr+extraStr);
     }
@@ -179,17 +181,17 @@ public class Context
         return m_logstring.toString();
     }
 
-    private void addLogRecord( int id, String type, String subtype, String target, String policyid, String policyversion, String data) 
+    private void addLogRecord( int id, String type, String subtype, String decisionifnotsilent, String target, String policyid, String policyversion, String isSilent,  String data) 
     {
         if ("CSV".equals(s_logobformat )) {
-            addLogRecordCSV( id, type, subtype, target, policyid, policyversion, data) ;
+            addLogRecordCSV( id, type, subtype, decisionifnotsilent, target, policyid, policyversion, isSilent, data) ;
         } else if ("XML".equals(s_logobformat )) {
-            addLogRecordXML( id, type, subtype, target, policyid, policyversion, data);
+            addLogRecordXML( id, type, subtype, decisionifnotsilent, target, policyid, policyversion, isSilent, data);
         }
     }
 
     // Log in XML format
-    private void addLogRecordXML( int id, String type, String subtype, String target,String policyid, String policyversion,  String data) 
+    private void addLogRecordXML( int id, String type, String subtype, String decisionifnotsilent, String target,String policyid, String policyversion, String isSilent,  String data) 
     {
         if (m_logstring == null) {
             m_logstring = new StringBuilder();
@@ -220,7 +222,7 @@ public class Context
     } 
     
     // Log in CSV format
-    private void addLogRecordCSV(int id, String type, String subtype, String target, String policyid, String policyversion, String data) 
+    private void addLogRecordCSV(int id, String type, String subtype, String decisionifnotsilent, String target, String policyid, String policyversion, String isSilent, String data) 
     {
         if (m_logstring == null) {
             m_logstring = new StringBuilder();
@@ -230,9 +232,11 @@ public class Context
         encode(""+id).append(",");
         encode(type).append(",");
         encode(subtype).append(",");
+        encode(decisionifnotsilent).append(",");
         encode(target).append(",");
         encode(policyid).append(",");
         encode(policyversion).append(",");
+        encode(isSilent).append(",");
         encode(data);
     }
     // Escape comma characters only for now

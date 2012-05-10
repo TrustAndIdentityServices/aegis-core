@@ -132,5 +132,13 @@ public class Decision
         sbld.append("}");
         return sbld.toString();
     }
-
+    public Decision deepcopy() throws Exception
+    {
+        Decision d = new Decision(m_type);
+        if (m_obligations != null)
+            d.m_obligations = (ArrayList<Obligation> ) m_obligations.clone();
+        if (m_advices != null)
+            d.m_advices     = (ArrayList<Advice>) m_advices.clone();
+        return d;
+    }
 }
