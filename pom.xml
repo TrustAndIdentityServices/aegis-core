@@ -29,4 +29,16 @@
     	<version>4.7</version>
     </dependency>
   </dependencies>
+  
+        <distributionManagement>
+            <repository>
+                  <id>raptor.releases</id>
+                  <url>http://nxraptor/content/repositories/releases/</url>
+            </repository>
+            <snapshotRepository>
+                  <id>raptor.snapshots</id>
+                  <url>http://nxraptor/content/repositories/snapshots/</url>
+            </snapshotRepository>
+      </distributionManagement>
+      
 </project>
