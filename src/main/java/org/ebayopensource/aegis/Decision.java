@@ -103,19 +103,19 @@ public class Decision
     }
 
     /**
-     * Reset Obligations
-     */
-    public void resetObligations()
-    {
-        m_obligations = null;
-    }
-
-    /**
      * Reset  Advices
      */
     public void resetAdvices()
     {
         m_advices = null;
+    }
+
+    /**
+     * Reset  Obligations
+     */
+    public void resetObligations()
+    {
+        m_obligations = null;
     }
 
     public String toString()

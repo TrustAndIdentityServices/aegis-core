@@ -73,6 +73,14 @@ public abstract class BaseAssertionEvaluator implements AssertionEvaluator
                     if (comp > 0)
                         match = true;
                     break;
+                case Assertion.OP_LE :
+                    if (comp <= 0)
+                        match = true;
+                    break;
+                case Assertion.OP_GE :
+                    if (comp >= 0)
+                        match = true;
+                    break;
                 default :
                     throw new PolicyException("INVALID_OPERATOR", e.op_);
             }

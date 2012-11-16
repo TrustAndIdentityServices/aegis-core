@@ -77,6 +77,15 @@ public class AssertionTest {
     public void testExprGTOperation() {
         testExpr(Assertion.OP_GT);
     }
+    @Test
+    public void testExprLEOperation() {
+        testExpr(Assertion.OP_LE);
+    }
+
+    @Test
+    public void testExprGEOperation() {
+        testExpr(Assertion.OP_GE);
+    }
 
     @Test
     public void testExprInvalidOperation() {

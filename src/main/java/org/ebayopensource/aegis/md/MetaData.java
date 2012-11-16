@@ -21,6 +21,7 @@ import org.ebayopensource.aegis.debug.Debug;
 import org.ebayopensource.aegis.plugin.ConflictResolver;
 import org.ebayopensource.aegis.plugin.TargetEvaluator;
 import org.ebayopensource.aegis.plugin.AssertionEvaluator;
+import org.ebayopensource.aegis.plugin.ObligationEvaluator;
 import org.ebayopensource.aegis.plugin.RuleEvaluator;
 import org.ebayopensource.aegis.plugin.MetaDataRepository;
 
@@ -38,6 +39,8 @@ public class MetaData
     public final static String DEFAULT_RULE_EVALCLASS= null;
     public final static String DEFAULT_ASSERTION_EVALCLASS=
         "org.ebayopensource.aegis.impl.GenericAssertionEvaluator";
+    public final static String DEFAULT_OBLIGATION_EVALCLASS=
+        "org.ebayopensource.aegis.impl.DefaultObligationEvaluator";
     public final static String DEFAULT_CONFLICTRESOLVER_CLASS = 
         "org.ebayopensource.aegis.impl.SimpleDenyOverridesConflictResolver";
     private Properties m_props = null;
@@ -80,6 +83,19 @@ public class MetaData
             return (AssertionEvaluator) Class.forName(cl).newInstance();
         } catch (Exception ex) {
             Debug.error("MetaData", "getAssertionEvaluator:error loading class:", ex);
+            return null;
+        }
+    }
+    public Object getObligationEvaluator(String type)
+    {
+        try {
+            String cl = getProperty( "obligation."+type+".evalclass");
+            if (cl == null)
+                cl = DEFAULT_OBLIGATION_EVALCLASS;
+            Debug.message("MetaData", "getObligationEvaluator:type="+type+" class="+cl);
+            return (ObligationEvaluator) Class.forName(cl).newInstance();
+        } catch (Exception ex) {
+            Debug.error("MetaData", "getObligationEvaluator:error loading class:", ex);
             return null;
         }
     }

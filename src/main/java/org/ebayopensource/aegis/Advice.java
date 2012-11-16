@@ -16,7 +16,7 @@ public class Advice
 {
     private String m_type = null;
     private ArrayList<CExpr> m_attrs = null;
-    static private String[] s_strs = { "=", "!=", "<", ">" };
+    static private String[] s_strs = { "=", "!=", "<", ">", "in", "notin", "<=", ">=" };
 
     /**
      * Constructs a Advice 

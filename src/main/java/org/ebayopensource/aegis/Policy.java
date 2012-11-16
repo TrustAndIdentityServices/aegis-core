@@ -31,6 +31,7 @@ public class Policy
     private Expression<Rule> m_rules;
     private boolean          m_silent = false;
     private boolean          m_active = true;
+    private List<String>     m_obligations;
 
     public Policy(String name, String desc, List<Target> targets,
                   Expression<Rule> rules, Effect effect)
@@ -40,6 +41,7 @@ public class Policy
         m_targets = targets;
         m_effect = effect;
         m_rules = rules;
+        m_obligations = null;
     }
 
     public String getId()
@@ -102,6 +104,16 @@ public class Policy
         m_active = state;
     }
 
+    public List<String> getObligations()
+    {
+        return m_obligations;
+    }
+
+    public void setObligations(List<String> obligations)
+    {
+        m_obligations = obligations;
+    }
+
     public String toString()
     {
         StringBuilder sbld = new StringBuilder();
@@ -141,6 +153,19 @@ public class Policy
             sbld.append(getRules().toString(true));
         } else {
             sbld.append( "[ ]");
+        }
+
+        // Obligations
+        if (m_obligations != null ) {
+           sbld.append(", \"obligations\" : [");
+           int cnt = 0;
+           for (String o : m_obligations) {
+               if (cnt++ == 1) {
+                   sbld.append(", ");
+               }
+               sbld.append("\"").append(o).append("\"");
+           }
+           sbld.append("]");
         }
 
         sbld.append(     " } }");

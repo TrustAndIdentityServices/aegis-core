@@ -10,9 +10,11 @@
 *******************************************************************************/
 package org.ebayopensource.aegis.impl;
 
+import java.util.List;
 import org.ebayopensource.aegis.Advice;
 import org.ebayopensource.aegis.Decision;
 import org.ebayopensource.aegis.Effect;
+import org.ebayopensource.aegis.Obligation;
 import org.ebayopensource.aegis.Policy;
 import org.ebayopensource.aegis.debug.Debug;
 import org.ebayopensource.aegis.plugin.ConflictResolver;
@@ -29,8 +31,9 @@ public class SimpleDenyOverridesConflictResolver implements ConflictResolver
             // We have a concrete decision for this policy here
             switch (currentdecision.getType() ) {
                 case Effect.UNKNOWN :
-                    // Easy decision - switch to policy decsion
+                    // Easy decision - switch to policy decision
                     currentdecision.setType(effect);
+                    copyObligations(conditiondecision, currentdecision, true);
                     break;
                 case Effect.PERMIT :
                     if (effect == Effect.DENY) {
@@ -39,12 +42,16 @@ public class SimpleDenyOverridesConflictResolver implements ConflictResolver
                         // reset advices from condition decision
                         Debug.message("DOPConflictResolver","ph1 : reset Advices");
                         currentdecision.resetAdvices();
+                        copyObligations(conditiondecision, currentdecision, true);
                     } else {
                         // ignore PERMIT - we already have a PERMIT
+                        // Append obligations
+                        copyObligations(conditiondecision, currentdecision, false);
                     }
                     break;
                 case Effect.DENY :
-                    // Already DENIED - ignore this decision
+                    // Already DENIED - copy obligations
+                    copyObligations(conditiondecision, currentdecision, false);
                     break;
             }
         } else { // RULE_NOMATCH
@@ -78,5 +85,18 @@ public class SimpleDenyOverridesConflictResolver implements ConflictResolver
             decision.resetAdvices();
         if (effect == Decision.EFFECT_UNKNOWN)
             decision.setType(Decision.EFFECT_DENY);
+    }
+    private void copyObligations(Decision from, Decision to, boolean reset) 
+    {
+        // Remove existing obligations, replace with new obl
+        if (reset)
+            to.resetObligations();
+        List<Obligation> condobls = 
+            from.getObligations();
+        if (condobls != null) {
+            for (Obligation o : condobls) {
+               to.addObligation(o);
+            }
+        }
     }
 }

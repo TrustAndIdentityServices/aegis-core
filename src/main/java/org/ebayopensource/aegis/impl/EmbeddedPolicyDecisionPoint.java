@@ -32,6 +32,7 @@ import org.ebayopensource.aegis.PolicyDecisionPoint;
 import org.ebayopensource.aegis.PolicyStore;
 import org.ebayopensource.aegis.debug.Debug;
 import org.ebayopensource.aegis.plugin.AssertionEvaluator;
+import org.ebayopensource.aegis.plugin.ObligationEvaluator;
 import org.ebayopensource.aegis.plugin.AuditLogger;
 import org.ebayopensource.aegis.plugin.ConflictResolver;
 import org.ebayopensource.aegis.plugin.TargetEvaluator;
@@ -149,6 +150,18 @@ public class EmbeddedPolicyDecisionPoint implements PolicyDecisionPoint
                         conditionDecision.setType(Decision.RULE_MATCH);
                     } else {
                         conditionDecision.setType(Decision.RULE_NOMATCH);
+                    }
+                }
+
+                // Add obligations if this policy matches : only for non-silent policies
+                if (!policy.isSilent() && conditionDecision.getType() == Decision.RULE_MATCH) {
+                    List<String> pobs = policy.getObligations();
+                    if (pobs != null) {
+                        for (String obname : pobs) {
+                            ObligationEvaluator obeval = (ObligationEvaluator) context.getMetaData().getObligationEvaluator(obname);
+                            Obligation ob = obeval.getObligation(obname, context);
+                            conditionDecision.addObligation(ob);
+                        }
                     }
                 }
                 

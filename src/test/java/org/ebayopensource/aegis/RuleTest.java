@@ -25,10 +25,10 @@ public class RuleTest {
 	
     static private String category = "categoryx";
     static private String name = "namex";
-    static private String attrs[] = { "attr1", "attr2", "attr3", "attr4"};
-    static private int ops[] = {Assertion.OP_EQ, Assertion.OP_NE, Assertion.OP_LT, Assertion.OP_GT };
-    static private String vals[] = { "val1", "val2", "val3", "val4"};
-    static private int INVALID_OP = 4;
+    static private String attrs[] = { "attr1", "attr2", "attr3", "attr4", "attr5", "attr6"};
+    static private int ops[] = {Assertion.OP_EQ, Assertion.OP_NE, Assertion.OP_LT, Assertion.OP_GT, Assertion.OP_LE, Assertion.OP_GE };
+    static private String vals[] = { "val1", "val2", "val3", "val4", "val5", "val6"};
+    static private int INVALID_OP = 6;
 
     @BeforeClass
     public static void oneTimeSetUp() {
@@ -72,12 +72,12 @@ public class RuleTest {
     }
 
     private void testExpr(int op) {
-        Rule rule = createARule(Expression.ALL_OF, 4);
+        Rule rule = createARule(Expression.ALL_OF, 6);
         Expression<Assertion> ex1 = rule.getExpression();
         assertEquals((ex1 != null), true);
         ArrayList<Object> members = ex1.getMembers();
         int sz =members.size();
-        assertEquals(sz, 4);
+        assertEquals(sz, 6);
         for (int i = 0; i < sz; i++) {
             Assertion a = (Assertion) members.get(i);
             CExpr c = a.getCExpr();

@@ -213,7 +213,23 @@ public class JSONPolicyStore implements PolicyStore
                 Rule rule = new Rule(category, "", assertions);
                 rules.add(rule);
             }
+
+            // Retrieve obligations
+            List obligations = null;
+            try {
+                JSONArray j_obligations = policy.getJSONArray("obligations");
+                for (int i = 0; i < j_obligations.length() ; i++) {
+                    String obl = j_obligations.getString(i);
+                    if (obligations == null)
+                        obligations = new ArrayList<String>();
+                    obligations.add(obl);
+                }
+            } catch (Exception ex) {}
+
             pol1 = new Policy(name, desc, targets, rules, effect);
+            if (obligations != null) {
+                pol1.setObligations(obligations);
+            }
             // Set state 
             pol1.setActive(active);
             // Set silent mode if present
