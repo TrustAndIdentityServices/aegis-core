@@ -7,8 +7,7 @@ aegis-core - This project.
 aegis-client-java -  Meant for Integrators of Aegis enforcement engine - eg 
              developers wanting to incorporate Aegis enforcement to define and
              enforce policies in their own apps.
-aegis-raptor -  Provides Raptor integration. Meant for Raptor developers
-             wanting to incorporate Aegis functionality for their raptor apps.
+aegis-console - [ Coming Soon]
 
 Eclipse Instructions:
 ======================
